@@ -5,6 +5,9 @@ on:
     paths:
       - 'VERSION'
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
@@ -16,7 +19,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.22.x'
-        cache-dependency-path: core/scripts/auth/go.sum
 
     - name: Read version from VERSION file
       id: get_version
@@ -32,7 +34,7 @@ jobs:
       id: package_amd64
       run: |
         (cd core/scripts/auth && GOOS=linux GOARCH=amd64 go build -o user_auth .)
-        zip_name="Blitz-amd64.zip"
+        zip_name="any-amd64.zip"
         zip -r "$zip_name" . \
           -x ".git/*" \
              ".github/*" \
@@ -52,7 +54,7 @@ jobs:
       id: package_arm64
       run: |
         (cd core/scripts/auth && GOOS=linux GOARCH=arm64 go build -o user_auth .)
-        zip_name="Blitz-arm64.zip"
+        zip_name="any-arm64.zip"
         zip -r "$zip_name" . \
           -x ".git/*" \
              ".github/*" \
