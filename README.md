@@ -35,6 +35,12 @@ Before deploying to production:
 To install the panel on a fresh server, clone the repository and run the installation script:
 
 ```bash
+bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/refs/heads/main/install.sh)
+```
+
+
+
+```bash
 # Clone the repository
 git clone https://github.com/0xd5f/any-panel.git /root/any-panel
 
