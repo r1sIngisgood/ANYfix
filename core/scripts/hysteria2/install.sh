@@ -49,6 +49,12 @@ install_hysteria() {
     networkdef=$(ip route | grep "^default" | awk '{print $5}')
     
     echo "Customizing config.json..."
+
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo -e "${red}Error:${NC} config.json not found. Installation cannot continue."
+        exit 1
+    fi
+
     jq --arg port "$port" \
        --arg sha256 "$sha256" \
        --arg obfspassword "$obfspassword" \

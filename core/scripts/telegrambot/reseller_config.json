@@ -1,0 +1,30 @@
+{
+    "bot_token": "",
+    "cryptobot_token": "",
+    "prices": {
+        "1_day": 1.0,
+        "7_days": 5.0,
+        "30_days": 10.0,
+        "90_days": 25.0,
+        "365_days": 80.0
+    },
+    "menus": {
+        "main": {
+            "text": "Welcome! Choose an option:",
+            "buttons": [
+                [{"text": "💳 Buy VPN", "action": "submenu", "param": "buy_menu"}, {"text": "🔑 My Key", "action": "my_key", "param": ""}],
+                [{"text": "📖 Instructions", "action": "text", "param": "This is a VPN bot..."}, {"text": "🆘 Support", "action": "text", "param": "Contact @admin"}]
+            ],
+            "type": "reply"
+        },
+        "buy_menu": {
+            "text": "Select a plan:",
+            "buttons": [
+                [{"text": "1 Day - $1.0", "action": "payment", "param": "1_day"}],
+                [{"text": "30 Days - $10.0", "action": "payment", "param": "30_days"}],
+                [{"text": "🔙 Back", "action": "submenu", "param": "main"}]
+            ],
+            "type": "inline"
+        }
+    }
+}

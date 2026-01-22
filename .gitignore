@@ -160,26 +160,5 @@ cython_debug/
 #.idea/
 
 hysteria2_venv/
-
-*.env
-.env.*
-!.env.example
-!config.example.json
-reseller_config.json
-!reseller_config.example.json
-
-*.key
-*.crt
-*.pem
-ca.*
-
-*.db
-*.sqlite
-*.sqlite3
-
-*.backup
-*.bak
-backups/
-
-session/
-*.session
+# .vscode/
+# !.vscode/settings.json
