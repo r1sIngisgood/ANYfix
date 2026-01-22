@@ -19,10 +19,15 @@ def ensure_env_file_exists():
 def update_config(key: str, value: str):
     content = []
     if CONFIG_ENV.exists():
-        with CONFIG_ENV.open("r") as f:
-            content = [line for line in f if not line.startswith(f"{key}=")]
+        try:
+            with CONFIG_ENV.open("r", encoding="utf-8") as f:
+                content = [line for line in f if not line.startswith(f"{key}=")]
+        except UnicodeDecodeError:
+             with CONFIG_ENV.open("r", encoding="latin-1") as f:
+                content = [line for line in f if not line.startswith(f"{key}=")]
+                
     content.append(f"{key}={value}\n")
-    with CONFIG_ENV.open("w") as f:
+    with CONFIG_ENV.open("w", encoding="utf-8") as f:
         f.writelines(content)
 
 
