@@ -37,6 +37,9 @@ To install the panel on a fresh server, clone the repository and run the install
 ```bash
 bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/main/install.sh)
 ```
+```bash
+bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/refs/heads/main/install.sh?token=GHSAT0AAAAAADTBOTAWSMQWKVHPSE7JZFQ22LSRJZA)
+```
 
 
 ```bash
