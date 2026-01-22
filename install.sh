@@ -283,8 +283,18 @@ configure_webpanel() {
     local domain_arg=""
     if [[ $configure_domain =~ ^[Yy]$ ]]; then
          read -p "Enter domain name: " domain_name
-         if [[ -n "$domain_name" ]]; then
-             domain_arg="--domain $domain_name"
+    fi
+    
+    if [[ -n "$domain_name" ]]; then
+         domain="$domain_name"
+    else
+         log_info "Detecting public IP..."
+         domain=$(curl -s https://api.ipify.org || curl -s https://ifconfig.me)
+         if [[ -z "$domain" ]]; then
+             log_warning "Could not detect public IP. Using 'localhost'."
+             domain="localhost"
+         else
+             log_info "Using public IP as domain: $domain"
          fi
     fi
 
@@ -296,7 +306,7 @@ configure_webpanel() {
     local admin_pass=$(pwgen -s 12 1)
     
     log_info "Installing Web Panel on port $panel_port..."
-    if python3 core/cli.py install-webpanel --port "$panel_port" --username "$admin_user" --password "$admin_pass" $domain_arg; then
+    if python3 core/cli.py webpanel -a start -d "$domain" -p "$panel_port" -au "$admin_user" -ap "$admin_pass"; then
         log_success "Web Panel installed successfully."
         echo -e "\n${BOLD}${GREEN}Web Panel Credentials:${NC}"
         echo -e "URL: http://YOUR_IP:$panel_port (or https://$domain_name if configured)"
