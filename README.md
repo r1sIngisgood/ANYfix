@@ -35,11 +35,9 @@ Before deploying to production:
 To install the panel on a fresh server, clone the repository and run the installation script:
 
 ```bash
-bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/main/install.sh)
+bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/refs/heads/main/install.sh)
 ```
-```bash
-bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/refs/heads/main/install.sh?token=GHSAT0AAAAAADTBOTAWSMQWKVHPSE7JZFQ22LSRJZA)
-```
+
 
 
 ```bash
