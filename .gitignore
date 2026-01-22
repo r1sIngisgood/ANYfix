@@ -164,7 +164,6 @@ hysteria2_venv/
 *.env
 .env.*
 !.env.example
-config.json
 !config.example.json
 reseller_config.json
 !reseller_config.example.json
