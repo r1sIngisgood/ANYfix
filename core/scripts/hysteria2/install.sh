@@ -51,8 +51,13 @@ install_hysteria() {
     echo "Customizing config.json..."
 
     if [ ! -f "$CONFIG_FILE" ]; then
-        echo -e "${red}Error:${NC} config.json not found. Installation cannot continue."
-        exit 1
+        echo "config.json not found, downloading from repository..."
+        curl -sL -o "$CONFIG_FILE" "https://raw.githubusercontent.com/0xd5f/ANY/main/config.json"
+        
+        if [ ! -f "$CONFIG_FILE" ]; then
+            echo -e "${red}Error:${NC} Failed to download config.json. Installation cannot continue."
+            exit 1
+        fi
     fi
 
     jq --arg port "$port" \
