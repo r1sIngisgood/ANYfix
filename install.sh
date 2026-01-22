@@ -248,29 +248,6 @@ setup_python_env() {
     fi
 }
 
-configure_hysteria() {
-    log_info "Configuring Hysteria2..."
-    
-    if systemctl is-active --quiet hysteria-server.service; then
-        log_info "Hysteria server is already running. Skipping configuration."
-        return 0
-    fi
-
-    local port="1935"
-    local sni="github.com"
-
-    log_info "Using Port: $port"
-    log_info "Using SNI: $sni"
-
-    if python3 core/cli.py install-hysteria2 --port "$port" --sni "$sni"; then
-        log_success "Hysteria2 configured successfully."
-        echo "SNI=$sni" > /etc/hysteria/.configs.env
-    else
-        log_error "Failed to configure Hysteria2."
-        exit 1
-    fi
-}
-
 add_alias() {
     log_info "Adding 'hys2' alias to .bashrc..."
     
@@ -301,7 +278,6 @@ main() {
     install_packages
     download_and_extract_release
     setup_python_env
-    configure_hysteria
     add_alias
     
     source ~/.bashrc &> /dev/null || true
