@@ -1,9 +1,20 @@
 from fastapi import APIRouter, HTTPException
 from ..schema.response import DetailResponse
-from ..schema.config.security import ChangeCredentialsInputBody, TelegramAuthInputBody, TelegramAuthResponse, ChangeRootPathInputBody
+from ..schema.config.security import ChangeCredentialsInputBody, TelegramAuthInputBody, TelegramAuthResponse, ChangeRootPathInputBody, ChangeDomainPortInputBody
 import cli_api
 
 router = APIRouter()
+
+@router.post('/domain-port', response_model=DetailResponse, summary='Change Domain/Port')
+async def change_domain_port_api(body: ChangeDomainPortInputBody):
+    try:
+        if not body.domain and not body.port:
+             raise HTTPException(status_code=400, detail='Either domain or port must be provided.')
+        
+        cli_api.change_webpanel_domain_port(body.domain, body.port)
+        return DetailResponse(detail='Configuration updated. The panel is restarting...')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
 
 @router.post('/credentials', response_model=DetailResponse, summary='Change Admin Credentials')
 async def change_credentials_api(body: ChangeCredentialsInputBody):

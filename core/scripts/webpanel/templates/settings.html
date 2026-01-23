@@ -52,6 +52,7 @@
     data-security-set-telegram-auth-url="{{ url_for('set_telegram_auth_status_api') }}"
     data-security-get-root-path-url="{{ url_for('get_root_path_api') }}"
     data-security-change-root-path-url="{{ url_for('change_root_path_api') }}"
+    data-security-change-domain-port-url="{{ url_for('change_domain_port_api') }}"
 
     data-start-ip-limit-url="{{ url_for('start_ip_limit_api') }}"
     data-stop-ip-limit-url="{{ url_for('stop_ip_limit_api') }}"
@@ -516,6 +517,36 @@
                             Update Credentials
                         </button>
                     </form>
+                </div>
+
+                <!-- Domain & Port -->
+                <div class="mt-8 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+                    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-globe mr-2 text-cyan-500"></i> Domain & Port
+                    </h3>
+                    <p class="text-sm text-zinc-500 mb-4">
+                        Change the domain and port where the panel is accessible.
+                    </p>
+                    
+                    <form id="change_domain_port_form">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="panel_domain" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Domain / IP</label>
+                                <input type="text" id="panel_domain" class="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-white placeholder-zinc-400" placeholder="e.g. panel.example.com">
+                            </div>
+                            <div>
+                                <label for="panel_port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Port</label>
+                                <input type="number" id="panel_port" class="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-white placeholder-zinc-400" placeholder="e.g. 8080">
+                            </div>
+                        </div>
+
+                        <button id="save_domain_port_btn" type='button' class='px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium text-sm'>
+                            Update Configuration
+                        </button>
+                    </form>
+                     <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-100 dark:border-yellow-900/30 text-xs text-yellow-700 dark:text-yellow-400">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Changing these settings will restart the panel service immediately. You will lose connection and must reconnect using the new details.
+                    </div>
                 </div>
 
                 <!-- Secret Panel Path -->

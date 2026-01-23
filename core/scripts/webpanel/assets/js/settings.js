@@ -46,7 +46,8 @@ $(document).ready(function () {
         securityGetTelegramAuth: contentSection.dataset.securityGetTelegramAuthUrl,
         securitySetTelegramAuth: contentSection.dataset.securitySetTelegramAuthUrl,
         securityGetRootPath: contentSection.dataset.securityGetRootPathUrl,
-        securityChangeRootPath: contentSection.dataset.securityChangeRootPathUrl
+        securityChangeRootPath: contentSection.dataset.securityChangeRootPathUrl,
+        securityChangeDomainPort: contentSection.dataset.securityChangeDomainPortUrl
     };
 
     initUI();
@@ -1597,6 +1598,55 @@ $(document).ready(function () {
                 input.attr('type', 'password');
                 icon.removeClass('fa-eye-slash').addClass('fa-eye');
             }
+        });
+
+        // Domain & Port Logic
+        const currentDomain = contentSection.dataset.domain;
+        const currentPort = contentSection.dataset.port;
+        if (currentDomain) $('#panel_domain').val(currentDomain);
+        if (currentPort) $('#panel_port').val(currentPort);
+
+        $('#save_domain_port_btn').click(function() {
+            const domain = $('#panel_domain').val().trim();
+            const port = $('#panel_port').val().trim();
+
+            if (!domain && !port) {
+                Swal.fire('Error', 'Please enter a domain or port.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Changing domain or port will restart the panel. You will need to access it via the new URL.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: API_URLS.securityChangeDomainPort, 
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ domain: domain, port: port ? parseInt(port) : null }),
+                        success: function (response) {
+                             Swal.fire({
+                                title: 'Success!',
+                                text: 'Configuration updated. Panel is restarting... Please check your new URL.',
+                                icon: 'success',
+                                timer: 10000,
+                                showConfirmButton: true
+                            });
+                        },
+                        error: function (xhr) {
+                            let msg = "Failed to update configuration.";
+                            if (xhr.responseJSON && xhr.responseJSON.detail) msg = xhr.responseJSON.detail;
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                }
+            });
         });
 
         // Root Path Logic

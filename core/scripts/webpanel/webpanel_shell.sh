@@ -76,17 +76,29 @@ update_caddy_file() {
     fi
 
     if [ -z "$ROOT_PATH" ] || [ "$ROOT_PATH" == "/" ]; then
+        # Check if DOMAIN is an IP address to enforce HTTP
+        ADDRESS_PREFIX=""
+        if [[ "$DOMAIN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+             ADDRESS_PREFIX="http://"
+        fi
+        
         cat <<EOL > "$CADDY_CONFIG_FILE"
 {
     admin off
     auto_https disable_redirects
 }
 
-$DOMAIN:$PORT {
+${ADDRESS_PREFIX}$DOMAIN:$PORT {
     reverse_proxy http://127.0.0.1:28260
 }
 EOL
         return 0
+    fi
+
+    # Check if DOMAIN is an IP address to enforce HTTP
+    ADDRESS_PREFIX=""
+    if [[ "$DOMAIN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            ADDRESS_PREFIX="http://"
     fi
 
     if [ -n "$DECOY_PATH" ] && [ "$DECOY_PATH" != "None" ] && [ "$PORT" -eq 443 ]; then
@@ -96,7 +108,7 @@ EOL
     auto_https disable_redirects
 }
 
-$DOMAIN:$PORT {
+${ADDRESS_PREFIX}$DOMAIN:$PORT {
     route /$ROOT_PATH/* {
 
         reverse_proxy http://127.0.0.1:28260
@@ -113,12 +125,6 @@ $DOMAIN:$PORT {
 }
 EOL
     else
-        # Check if DOMAIN is an IP address to enforce HTTP
-        ADDRESS_PREFIX=""
-        if [[ "$DOMAIN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-             ADDRESS_PREFIX="http://"
-        fi
-
         cat <<EOL > "$CADDY_CONFIG_FILE"
 {
     admin off
