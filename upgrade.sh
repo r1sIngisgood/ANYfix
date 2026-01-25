@@ -318,13 +318,17 @@ else
     for SERVICE in "${ACTIVE_SERVICES_BEFORE_UPGRADE[@]}"; do
         info "Attempting to restart $SERVICE..."
         systemctl enable "$SERVICE" &>/dev/null || warn "Could not enable $SERVICE. It might not exist."
-        systemctl restart "$SERVICE"
-        sleep 2
-        if systemctl is-active --quiet "$SERVICE"; then
-            success "$SERVICE restarted successfully and is active."
+        if systemctl restart "$SERVICE" 2>/dev/null; then
+            sleep 2
+            if systemctl is-active --quiet "$SERVICE"; then
+                success "$SERVICE restarted successfully and is active."
+            else
+                warn "$SERVICE failed to start or is not active."
+                warn "Showing last 5 log entries for $SERVICE:"
+                journalctl -u "$SERVICE" -n 5 --no-pager
+            fi
         else
-            warn "$SERVICE failed to restart or is not active."
-            warn "Showing last 5 log entries for $SERVICE:"
+            warn "$SERVICE failed to restart. It might need manual configuration."
             journalctl -u "$SERVICE" -n 5 --no-pager
         fi
     done
