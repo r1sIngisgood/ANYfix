@@ -416,7 +416,7 @@ edit_ips() {
 }
 
 hysteria_upgrade(){
-    bash <(curl https://raw.githubusercontent.com/0xd5f/any-panel/main/upgrade.sh)
+    bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade.sh)
 }
 
 warp_configure_handler() {
