@@ -111,6 +111,14 @@
         ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
         .dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.5s infinite ease-in-out;
+        }
     </style>
     
     <!-- Theme Init Script to prevent flash -->
@@ -206,10 +214,10 @@
                         <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
                     </button>
 
-                    <!-- Telegram -->
-                    <a href="https://t.me/oxd5f" target="_blank" class="text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors" title="Support">
-                        <i class="fab fa-telegram"></i>
-                    </a>
+                    <!-- Support -->
+                    <button @click="$dispatch('open-donation-modal')" class="text-red-500 hover:text-red-600 transition-colors" title="Support & Donate">
+                        <i class="fas fa-heart animate-heartbeat"></i>
+                    </button>
 
                     <!-- Logout -->
                     <a href="{{ url_for('logout') }}" class="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors" title="Logout">
@@ -277,17 +285,116 @@
                     <div class="bg-white dark:bg-zinc-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start justify-center">
                             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                                <h3 class="text-xl font-semibold leading-6 text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2" id="modal-title">
-                                    <i class="fas fa-heart text-pink-500"></i> Support Project
+                                <h3 class="text-xl font-semibold leading-6 text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-2" id="modal-title">
+                                    <i class="fas fa-heart text-red-500"></i> Support Project
                                 </h3>
-                                <div class="mt-4 flex justify-center">
-                                    <iframe src="https://nowpayments.io/embeds/donation-widget?api_key=8e3029da-4479-4426-9e84-9b0fbee7be97" width="346" height="623" frameborder="0" scrolling="no" style="overflow-y: hidden; border-radius: 12px; border: none;">
-                                        Can't load widget
-                                    </iframe>
+                                
+                                <div class="space-y-6">
+                                    <!-- Crypto Wallets -->
+                                    <div class="rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
+                                        <div class="bg-gray-50 dark:bg-zinc-800/50 px-4 py-2 border-b border-gray-200 dark:border-zinc-700">
+                                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Cryptocurrency Wallets</h4>
+                                        </div>
+                                        <div class="divide-y divide-gray-200 dark:divide-zinc-700 bg-white dark:bg-zinc-900">
+                                            <!-- BTC -->
+                                            <div class="group flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-2 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors" x-data="{ copied: false }">
+                                                <div class="flex items-center gap-3 min-w-[120px]">
+                                                    <i class="fab fa-bitcoin text-orange-500 text-xl w-6 text-center"></i>
+                                                    <span class="font-medium text-sm text-gray-900 dark:text-white">BTC</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
+                                                    <code class="flex-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300 break-all select-all hover:text-primary-500 truncate">bc1qhtfxycw57z6c2xfsaa5hfp8gws4jjrnsyq57n4</code>
+                                                    <button @click="navigator.clipboard.writeText('bc1qhtfxycw57z6c2xfsaa5hfp8gws4jjrnsyq57n4'); copied=true; setTimeout(() => copied=false, 2000)" 
+                                                            class="flex-shrink-0 p-1.5 text-gray-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700" 
+                                                            title="Copy">
+                                                        <i class="fas" :class="copied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- TRX -->
+                                            <div class="group flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-2 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors" x-data="{ copied: false }">
+                                                <div class="flex items-center gap-3 min-w-[120px]">
+                                                    <span class="text-red-500 font-bold text-xs border border-red-500 rounded px-1">TRX</span>
+                                                    <span class="font-medium text-sm text-gray-900 dark:text-white">Tron</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
+                                                    <code class="flex-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300 break-all select-all hover:text-primary-500 truncate">TEmnHg48yLneutMqk9BDP79uMqQQ2LNFxx</code>
+                                                    <button @click="navigator.clipboard.writeText('TEmnHg48yLneutMqk9BDP79uMqQQ2LNFxx'); copied=true; setTimeout(() => copied=false, 2000)" 
+                                                            class="flex-shrink-0 p-1.5 text-gray-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700" 
+                                                            title="Copy">
+                                                        <i class="fas" :class="copied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- USDT -->
+                                            <div class="group flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-2 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors" x-data="{ copied: false }">
+                                                <div class="flex items-center gap-3 min-w-[120px]">
+                                                    <span class="text-green-500 font-bold text-xs border border-green-500 rounded px-1">USDT</span>
+                                                    <span class="font-medium text-sm text-gray-900 dark:text-white">TRC20</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
+                                                    <code class="flex-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300 break-all select-all hover:text-primary-500 truncate">TEmnHg48yLneutMqk9BDP79uMqQQ2LNFxx</code>
+                                                    <button @click="navigator.clipboard.writeText('TEmnHg48yLneutMqk9BDP79uMqQQ2LNFxx'); copied=true; setTimeout(() => copied=false, 2000)" 
+                                                            class="flex-shrink-0 p-1.5 text-gray-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700" 
+                                                            title="Copy">
+                                                        <i class="fas" :class="copied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- TON -->
+                                            <div class="group flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-2 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors" x-data="{ copied: false }">
+                                                <div class="flex items-center gap-3 min-w-[120px]">
+                                                    <i class="fas fa-gem text-blue-400 text-xl w-6 text-center"></i>
+                                                    <span class="font-medium text-sm text-gray-900 dark:text-white">TON</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
+                                                    <code class="flex-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300 break-all select-all hover:text-primary-500 truncate">UQCIMGaysD8Ayl1lx_LAdld9NVnTcMxIF5lA-dlMmUqM1s96</code>
+                                                    <button @click="navigator.clipboard.writeText('UQCIMGaysD8Ayl1lx_LAdld9NVnTcMxIF5lA-dlMmUqM1s96'); copied=true; setTimeout(() => copied=false, 2000)" 
+                                                            class="flex-shrink-0 p-1.5 text-gray-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700" 
+                                                            title="Copy">
+                                                        <i class="fas" :class="copied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <a href="https://t.me/any_panel" target="_blank" class="flex items-center p-3 rounded-xl border border-gray-200 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-500 bg-white dark:bg-zinc-800 hover:shadow-md transition-all group">
+                                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mr-3 group-hover:scale-110 transition-transform">
+                                                <i class="fab fa-telegram-plane text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Telegram</p>
+                                                <p class="text-sm font-bold text-gray-800 dark:text-white">@any_panel</p>
+                                            </div>
+                                        </a>
+
+                                        <div class="flex items-center p-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 justify-between group" x-data="{ copied: false }">
+                                            <div class="flex items-center overflow-hidden">
+                                                <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 mr-3 shrink-0">
+                                                    <i class="fas fa-envelope text-lg"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Email</p>
+                                                    <p class="text-sm font-bold text-gray-800 dark:text-white truncate select-all">oxd5f@proton.me</p>
+                                                </div>
+                                            </div>
+                                            <button @click="navigator.clipboard.writeText('oxd5f@proton.me'); copied=true; setTimeout(() => copied=false, 2000)" 
+                                                    class="ml-2 p-1.5 text-gray-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700" 
+                                                    title="Copy Email">
+                                                <i class="fas" :class="copied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center pt-2">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                                            Thank you for your support! <i class="fas fa-heart text-red-500"></i>
+                                        </p>
+                                    </div>
                                 </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
-                                    Thank you for keeping this project alive! ❤️
-                                </p>
                             </div>
                         </div>
                     </div>

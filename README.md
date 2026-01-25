@@ -112,5 +112,9 @@ Your support helps keep the project alive and updated.
 
 | Platform | Link |
 | :--- | :--- |
-| **Telegram** | [Oxd5f](https://t.me/Oxd5f) |
+| **Telegram** | [any_panel](https://t.me/any_panel) |
 | **Email** | `oxd5f@proton.me` |
+
+
+
+| **Forks** | [Blitz](https://github.com/ReturnFI/Blitz) |
