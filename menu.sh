@@ -1245,6 +1245,9 @@ main_menu() {
             5) python3 $CLI_PATH restart-hysteria2 ;;
             6) python3 $CLI_PATH uninstall-hysteria2 ;;
             0) exit 0 ;;
-            *) echo -e "${red}
+            *) echo -e "${red}Invalid option. Please try again.${NC}" ; sleep 1 ;;
+        esac
+    done
+}
 
 main_menu

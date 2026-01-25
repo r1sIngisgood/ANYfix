@@ -282,6 +282,10 @@ configure_hysteria() {
     if python3 core/cli.py install-hysteria2 --port "$port" --sni "$sni"; then
         log_success "Hysteria2 configured successfully."
         echo "SNI=$sni" > /etc/hysteria/.configs.env
+        
+        # Determine IPs and save to .configs.env
+        log_info "Detecting server IPs..."
+        python3 core/cli.py ip-address
     else
         log_error "Failed to configure Hysteria2."
         exit 1
@@ -363,7 +367,7 @@ add_alias() {
     log_info "Adding 'pany' alias to .bashrc..."
     
     if ! grep -q "alias pany=" ~/.bashrc; then
-        echo "alias pany='bash /etc/hysteria/menu.sh'" >> ~/.bashrc
+        echo "alias pany='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" >> ~/.bashrc
         log_success "Added 'pany' alias to .bashrc"
     else
         log_info "Alias 'pany' already exists in .bashrc"
