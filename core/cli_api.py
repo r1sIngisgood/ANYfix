@@ -162,6 +162,7 @@ def generate_password() -> str:
 
 def install_hysteria2(port: int, sni: str):
     run_cmd_and_stream(['bash', Command.INSTALL_HYSTERIA2.value, str(port), sni])
+    run_cmd(['python3', Command.IP_ADD.value, 'add'])
 
 
 def uninstall_hysteria2():

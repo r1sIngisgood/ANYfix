@@ -250,6 +250,18 @@ def get_interface_addresses():
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
+    if not ipv4_address:
+        try:
+            ipv4_address = subprocess.check_output(["curl", "-4", "-s", "--max-time", "5", "https://api.ipify.org"], stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            pass
+            
+    if not ipv6_address:
+        try:
+            ipv6_address = subprocess.check_output(["curl", "-6", "-s", "--max-time", "5", "https://api64.ipify.org"], stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            pass
+
     return ipv4_address, ipv6_address
 
 
