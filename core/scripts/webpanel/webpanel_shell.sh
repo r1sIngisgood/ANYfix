@@ -231,6 +231,17 @@ start_service() {
 
     install_dependencies
 
+    # Check for Python dependencies
+    if ! /etc/hysteria/hysteria2_venv/bin/python -c "import hypercorn, fastapi" > /dev/null 2>&1; then
+        echo -e "${yellow}Missing Python dependencies. Attempting to install...${NC}"
+        if /etc/hysteria/hysteria2_venv/bin/pip install -r /etc/hysteria/requirements.txt; then
+             echo -e "${green}Dependencies installed.${NC}"
+        else
+             echo -e "${red}Failed to install dependencies.${NC}"
+             return 1
+        fi
+    fi
+
     update_env_file "$domain" "$port" "$admin_username" "$admin_password" "$expiration_minutes" "$debug" "$decoy_path" "$self_signed"
     if [ $? -ne 0 ]; then
         echo -e "${red}Error: Failed to update the environment file.${NC}"
@@ -244,8 +255,8 @@ start_service() {
     fi
 
     systemctl daemon-reload
-    systemctl enable hysteria-webpanel.service > /dev/null 2>&1
-    systemctl start hysteria-webpanel.service > /dev/null 2>&1
+    systemctl enable hysteria-webpanel.service
+    systemctl start hysteria-webpanel.service
 
     if systemctl is-active --quiet hysteria-webpanel.service; then
         echo -e "${green}Hysteria web panel setup completed. The web panel is running locally on: http://127.0.0.1:28260/${NC}"
