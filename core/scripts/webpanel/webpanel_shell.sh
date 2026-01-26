@@ -82,6 +82,11 @@ update_caddy_file() {
              ADDRESS_PREFIX="http://"
         fi
         
+        # Cloudflare HTTP ports - enforce http://
+        if [[ "$PORT" =~ ^(80|8080|8880|2052|2082|2086|2095)$ ]]; then
+             ADDRESS_PREFIX="http://"
+        fi
+        
         cat <<EOL > "$CADDY_CONFIG_FILE"
 {
     admin off
@@ -99,6 +104,11 @@ EOL
     ADDRESS_PREFIX=""
     if [[ "$DOMAIN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             ADDRESS_PREFIX="http://"
+    fi
+
+    # Cloudflare HTTP ports - enforce http://
+    if [[ "$PORT" =~ ^(80|8080|8880|2052|2082|2086|2095)$ ]]; then
+         ADDRESS_PREFIX="http://"
     fi
 
     if [ -n "$DECOY_PATH" ] && [ "$DECOY_PATH" != "None" ] && [ "$PORT" -eq 443 ]; then

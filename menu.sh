@@ -733,6 +733,10 @@ webpanel_handler() {
                         elif ! [[ "$port" =~ ^[0-9]+$ ]]; then
                             echo "Port must be a number. Please try again."
                         else
+                            if [[ "$port" == "8080" || "$port" == "80" || "$port" == "8880" ]]; then
+                                echo -e "${yellow}Warning: Port $port is typically used for HTTP on Cloudflare.${NC}"
+                                echo -e "${yellow}For HTTPS on Cloudflare, consider using: 443, 2053, 2083, 2087, 2096, 8443.${NC}"
+                            fi
                             break
                         fi
                     done

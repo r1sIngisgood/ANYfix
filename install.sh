@@ -249,13 +249,13 @@ setup_python_env() {
 }
 
 add_alias() {
-    log_info "Adding 'hys2' alias to .bashrc..."
+    log_info "Adding 'any' alias to .bashrc..."
     
-    if ! grep -q "alias hys2='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" ~/.bashrc; then
-        echo "alias hys2='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" >> ~/.bashrc
-        log_success "Added 'hys2' alias to .bashrc"
+    if ! grep -q "alias any='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" ~/.bashrc; then
+        echo "alias any='source /etc/hysteria/hysteria2_venv/bin/activate && /etc/hysteria/menu.sh'" >> ~/.bashrc
+        log_success "Added 'any' alias to .bashrc"
     else
-        log_info "Alias 'hys2' already exists in .bashrc"
+        log_info "Alias 'any' already exists in .bashrc"
     fi
 }
 
