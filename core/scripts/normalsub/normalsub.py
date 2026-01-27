@@ -741,7 +741,7 @@ class HysteriaServer:
         profile_title_encoded = quote(self.config.profile_title)
         
         singbox_qrcode = Utils.generate_qrcode_base64(f"sing-box://import-remote-profile?url={sub_link_encoded}#{profile_title_encoded}")
-        hiddify_qrcode = Utils.generate_qrcode_base64(f"hiddify://import/{sub_link_encoded}#{profile_title_encoded}")
+        hiddify_qrcode = Utils.generate_qrcode_base64(f"hiddify://import/{sub_link}#{profile_title_encoded}")
         streisand_qrcode = Utils.generate_qrcode_base64(f"streisand://import/sub?url={sub_link_encoded}#{profile_title_encoded}")
         nekobox_qrcode = Utils.generate_qrcode_base64(f"nekobox://import?url={sub_link_encoded}#{profile_title_encoded}")
         
