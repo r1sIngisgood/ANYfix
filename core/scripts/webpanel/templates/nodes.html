@@ -20,6 +20,11 @@
     data-add-extra-config-url="{{ url_for('add_extra_config') }}"
     data-edit-extra-config-url="{{ url_for('edit_extra_config') }}"
     data-delete-extra-config-url="{{ url_for('delete_extra_config') }}"
+    
+    data-status-warp-url="{{ url_for('status_warp') }}"
+    data-install-warp-url="{{ url_for('install_warp') }}"
+    data-uninstall-warp-url="{{ url_for('uninstall_warp') }}"
+    data-configure-warp-url="{{ url_for('configure_warp') }}"
 ></div>
 
 <div class='content' x-data="{ activeTab: 'nodes' }">
@@ -328,6 +333,7 @@
     <div class="flex space-x-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-6 w-fit">
         <button @click="activeTab = 'nodes'" :class="activeTab === 'nodes' ? 'bg-white dark:bg-zinc-700 shadow text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">Node</button>
         <button @click="activeTab = 'external-proxy'" :class="activeTab === 'external-proxy' ? 'bg-white dark:bg-zinc-700 shadow text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">External Proxy</button>
+        <button @click="activeTab = 'warp'" :class="activeTab === 'warp' ? 'bg-white dark:bg-zinc-700 shadow text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">WARP</button>
     </div>
 
     <div x-show="activeTab === 'nodes'">
@@ -471,6 +477,74 @@
         </div>
     </div>
     
+    <!-- WARP Tab -->
+    <div x-show="activeTab === 'warp'">
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-8 text-center" id="warp_initial_controls">
+             <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                 <i class="fas fa-rocket text-2xl"></i>
+             </div>
+             <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Cloudflare WARP</h3>
+             <p class="text-zinc-500 mb-6 max-w-md mx-auto">Enhance your server's routing capabilities to access blocked content (Netflix, ChatGPT, etc.) using Cloudflare WARP.</p>
+             
+             <button id="warp_start_btn" type='button' class='px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium'>
+                 Install & Start WARP
+             </button>
+        </div>
+
+        <div id="warp_active_controls" style="display:none;" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                 <div class="flex items-center gap-3">
+                    <div class="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                     <h2 class="text-xl font-bold text-zinc-900 dark:text-white">WARP Configuration</h2>
+                </div>
+                <div class="flex gap-3">
+                     <div class="flex items-center px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Active
+                    </div>
+                    <button id="warp_stop_btn" class="text-red-500 hover:text-red-700 text-sm font-medium">Uninstall</button>
+                </div>
+            </div>
+
+            <form id="warp_config_form" class="space-y-4">
+                 <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
+                     <div>
+                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_all_traffic">Route All Traffic</label>
+                        <p class="text-xs text-zinc-500 mt-1">Route all outbound server traffic through WARP.</p>
+                     </div>
+                    <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="warp_all_traffic" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
+                        <label for="warp_all_traffic" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
+                    </div>
+                </div>
+                 <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
+                     <div>
+                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_popular_sites">Route Popular Sites</label>
+                        <p class="text-xs text-zinc-500 mt-1">Optimize routing for Netflix, Disney+, ChatGPT, etc.</p>
+                     </div>
+                     <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="warp_popular_sites" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
+                        <label for="warp_popular_sites" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
+                    <div>
+                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_domestic_sites">Route Domestic Sites</label>
+                        <p class="text-xs text-zinc-500 mt-1">Route domestic traffic through WARP (usually not recommended).</p>
+                     </div>
+                    <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="warp_domestic_sites" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
+                        <label for="warp_domestic_sites" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
+                    </div>
+                </div>
+                <button id="warp_save_config_btn" type='button' class='w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium text-sm mt-4'>
+                    Save Configuration
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Add Single Config Modal -->
     <div id="addConfigModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg transform transition-all border border-zinc-200 dark:border-zinc-800">
@@ -676,7 +750,15 @@ document.addEventListener('DOMContentLoaded', () => {
         addNode: dataContainer.dataset.addNodeUrl,
         editNode: dataContainer.dataset.editNodeUrl,
         deleteNode: dataContainer.dataset.deleteNodeUrlTemplate,
-        restartNode: dataContainer.dataset.restartNodeUrl
+          restartNode: dataContainer.dataset.restartNodeUrl,
+          getAllExtraConfigs: dataContainer.dataset.getAllExtraConfigsUrl,
+          addExtraConfig: dataContainer.dataset.addExtraConfigUrl,
+          editExtraConfig: dataContainer.dataset.editExtraConfigUrl,
+          deleteExtraConfig: dataContainer.dataset.deleteExtraConfigUrl,
+          statusWarp: dataContainer.dataset.statusWarpUrl,
+          installWarp: dataContainer.dataset.installWarpUrl,
+          uninstallWarp: dataContainer.dataset.uninstallWarpUrl,
+          configureWarp: dataContainer.dataset.configureWarpUrl
     };
 
     let configuredNodes = [];
@@ -1524,6 +1606,124 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchExtraConfigs();
         });
     }
+
+    // --- WARP Logic ---
+    const fetchWarpStatus = () => {
+         fetch(api.statusWarp)
+         .then(res => {
+             if (!res.ok) throw new Error("Status check failed");
+             return res.json();
+         })
+         .then(data => {
+            const controlsInitial = document.getElementById('warp_initial_controls');
+            const controlsActive = document.getElementById('warp_active_controls');
+
+            if (data.all_traffic_via_warp !== undefined || data.popular_sites_via_warp !== undefined) {
+                 // WARP is active/installed
+                 if(controlsInitial) controlsInitial.style.display = 'none';
+                 if(controlsActive) controlsActive.style.display = 'block';
+
+                 if(document.getElementById('warp_all_traffic')) document.getElementById('warp_all_traffic').checked = data.all_traffic_via_warp || false;
+                 if(document.getElementById('warp_popular_sites')) document.getElementById('warp_popular_sites').checked = data.popular_sites_via_warp || false;
+                 if(document.getElementById('warp_domestic_sites')) document.getElementById('warp_domestic_sites').checked = data.domestic_sites_via_warp || false;
+            } else {
+                 if(controlsInitial) controlsInitial.style.display = 'block';
+                 if(controlsActive) controlsActive.style.display = 'none';
+            }
+         })
+         .catch(err => {
+             // Assume not installed if 404 or error
+             const controlsInitial = document.getElementById('warp_initial_controls');
+             const controlsActive = document.getElementById('warp_active_controls');
+             if(controlsInitial) controlsInitial.style.display = 'block';
+             if(controlsActive) controlsActive.style.display = 'none';
+         });
+    };
+
+    const warpStartBtn = document.getElementById('warp_start_btn');
+    if (warpStartBtn) {
+        warpStartBtn.addEventListener('click', async () => {
+            const result = await Swal.fire({
+                title: 'Install & Start WARP?',
+                text: "This will install Cloudflare WARP and connect it. Internet connectivity might be interrupted briefly.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, proceed!'
+            });
+            
+            if (result.isConfirmed) {
+                Swal.fire({title: 'Installing...', didOpen: () => Swal.showLoading()});
+                fetch(api.installWarp, {method: 'POST'})
+                .then(async res => {
+                     const data = await res.json();
+                     if(!res.ok) throw new Error(data.detail || 'Installation failed');
+                     return data;
+                })
+                .then(() => {
+                    Swal.fire('Success', 'WARP installed and started!', 'success').then(() => location.reload());
+                })
+                .catch(e => Swal.fire('Error', e.message, 'error'));
+            }
+        });
+    }
+
+    const warpStopBtn = document.getElementById('warp_stop_btn');
+    if (warpStopBtn) {
+        warpStopBtn.addEventListener('click', async () => {
+            const result = await Swal.fire({
+                title: 'Uninstall WARP?',
+                text: "This will disconnect and uninstall Cloudflare WARP.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, uninstall!'
+            });
+            
+            if (result.isConfirmed) {
+                Swal.fire({title: 'Uninstalling...', didOpen: () => Swal.showLoading()});
+                fetch(api.uninstallWarp, {method: 'DELETE'})
+                .then(async res => {
+                     const data = await res.json();
+                     if(!res.ok) throw new Error(data.detail || 'Uninstallation failed');
+                     return data;
+                })
+                .then(() => {
+                    Swal.fire('Success', 'WARP uninstalled!', 'success').then(() => location.reload());
+                })
+                .catch(e => Swal.fire('Error', e.message, 'error'));
+            }
+        });
+    }
+
+    const warpSaveBtn = document.getElementById('warp_save_config_btn');
+    if (warpSaveBtn) {
+        warpSaveBtn.addEventListener('click', async () => {
+            const config = {
+                all: document.getElementById('warp_all_traffic').checked,
+                popular_sites: document.getElementById('warp_popular_sites').checked,
+                domestic_sites: document.getElementById('warp_domestic_sites').checked,
+                block_adult_sites: false 
+            };
+            
+            Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()});
+            fetch(api.configureWarp, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            })
+            .then(async res => {
+                 const data = await res.json();
+                 if(!res.ok) throw new Error(data.detail || 'Save failed');
+                 return data;
+            })
+            .then(() => {
+                Swal.fire('Success', 'WARP configuration saved.', 'success');
+                fetchWarpStatus();
+            })
+            .catch(e => Swal.fire('Error', e.message, 'error'));
+        });
+    }
+
+    fetchWarpStatus();
 
     fetchExtraConfigs();
 });

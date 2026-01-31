@@ -8,14 +8,36 @@ function updateServerInfo() {
             if (cpuBar) cpuBar.style.width = data.cpu_usage;
 
             document.getElementById('ram-usage').textContent = `${data.ram_usage} / ${data.total_ram}`;
+            
+            // Calculate RAM percentage client-side
+            const ramBar = document.getElementById('ram-bar-visual');
+            if (ramBar) {
+                let percent = 0;
+                try {
+                    const parseVal = (str) => {
+                         if (!str) return 0;
+                         const num = parseFloat(str);
+                         if (str.includes('TB')) return num * 1024 * 1024;
+                         if (str.includes('GB')) return num * 1024;
+                         if (str.includes('MB')) return num;
+                         if (str.includes('KB')) return num / 1024;
+                         return num;
+                    };
+                    const used = parseVal(data.ram_usage);
+                    const total = parseVal(data.total_ram);
+                    if (total > 0) percent = (used / total) * 100;
+                } catch(e) { console.error('RAM calc error', e); }
+                ramBar.style.width = `${percent}%`;
+            }
+
             document.getElementById('online-users').textContent = data.online_users;
             document.getElementById('uptime').textContent = data.uptime;
 
             document.getElementById('server-ipv4').textContent = `IPv4: ${data.server_ipv4 || 'N/A'}`;
             document.getElementById('server-ipv6').textContent = `IPv6: ${data.server_ipv6 || 'N/A'}`;
 
-            document.getElementById('download-speed').textContent = `🔽 Download: ${data.download_speed}`;
-            document.getElementById('upload-speed').textContent = `🔼 Upload: ${data.upload_speed}`;
+            document.getElementById('download-speed').textContent = data.download_speed;
+            document.getElementById('upload-speed').textContent = data.upload_speed;
             document.getElementById('tcp-connections').textContent = `TCP: ${data.tcp_connections}`;
             document.getElementById('udp-connections').textContent = `UDP: ${data.udp_connections}`;
 
@@ -184,7 +206,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function checkForUpdates() {
-        if (!shouldCheckForUpdates()) return;
+        // Always check (removed shouldCheckForUpdates restriction for immediate UI feedback for now, or keep logic but ensure indicator updates)
+        // Ideally we check every time or respect interval but Update Indicator should show if we know there is an update
+        if (!shouldCheckForUpdates()) {
+             // Even if we don't fetch new info, valid if we already know? 
+             // Simplest: Just run the check. The overhead is small. 
+             // Or better: Let's stick to the check logic but handle the indicator inside success.
+        }
 
         const checkVersionUrl = $('.content').data('check-version-url');
         $.ajax({
@@ -195,8 +223,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('lastUpdateCheck', Date.now().toString());
                 
                 if (response.is_latest) {
+                    $('#update-indicator').addClass('hidden');
                     localStorage.removeItem('updateDismissed');
                     return;
+                } else {
+                    $('#update-indicator').removeClass('hidden');
                 }
 
                 const dismissedVersion = localStorage.getItem('dismissedVersion');

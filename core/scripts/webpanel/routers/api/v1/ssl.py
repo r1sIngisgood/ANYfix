@@ -61,3 +61,52 @@ async def toggle_ssl_mode(data: SSLToggleRequest):
         return {"status": "success", "message": f"SSL mode set to {'Self-Signed' if data.self_signed else 'Custom'}."}
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail="Failed to apply SSL settings.")
+
+
+# --- Certbot Renewal Config ---
+RENEWAL_DIR = "/etc/letsencrypt/renewal"
+
+@router.get("/renewal/list")
+async def list_renewal_configs():
+    if not os.path.exists(RENEWAL_DIR):
+        return {"files": []}
+    files = [f for f in os.listdir(RENEWAL_DIR) if f.endswith(".conf")]
+    return {"files": files}
+
+@router.get("/renewal/file")
+async def get_renewal_config(filename: str):
+    path = os.path.join(RENEWAL_DIR, filename)
+    # Basic path traversal protection
+    if not filename.endswith(".conf") or "/" in filename or "\\" in filename or not os.path.normpath(path).startswith(RENEWAL_DIR):
+         raise HTTPException(status_code=400, detail="Invalid filename")
+    
+    if not os.path.exists(path):
+         raise HTTPException(status_code=404, detail="File not found")
+         
+    try:
+        with open(path, "r") as f:
+            content = f.read()
+        return {"content": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SaveRenewalRequest(BaseModel):
+    filename: str
+    content: str
+
+@router.post("/renewal/file")
+async def save_renewal_config(data: SaveRenewalRequest):
+    path = os.path.join(RENEWAL_DIR, data.filename)
+     # Basic path traversal protection
+    if not data.filename.endswith(".conf") or "/" in data.filename or "\\" in data.filename or not os.path.normpath(path).startswith(RENEWAL_DIR):
+         raise HTTPException(status_code=400, detail="Invalid filename")
+
+    if not os.path.exists(path):
+         raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        with open(path, "w") as f:
+            f.write(data.content)
+        return {"status": "success", "message": "Configuration saved."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

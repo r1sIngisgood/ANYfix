@@ -858,6 +858,12 @@ def get_ip_limiter_config() -> dict[str, int | None]:
 def change_webpanel_root_path(new_path: str):
     run_cmd(['bash', Command.WEBPANEL_SCRIPT.value, 'changeroot', new_path])
 
-def get_webpanel_root_path() -> str:
-    config = get_webpanel_env_config()
-    return config.get('ROOT_PATH', '')
+
+def update_panel():
+    full_cmd = "bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade2.sh)"
+    run_cmd(['bash', '-c', full_cmd])
+
+def update_panel_beta():
+     full_cmd = "bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/dev/upgrade2.sh)"
+     run_cmd(['bash', '-c', full_cmd])
+

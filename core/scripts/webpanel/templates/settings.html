@@ -48,6 +48,7 @@
     data-telegram-info-url="{{ url_for('telegram_info_api') }}"
 
     data-security-change-credentials-url="{{ url_for('change_credentials_api') }}"
+    data-update-panel-url="{{ url_for('update_panel_api') }}"
     data-security-get-telegram-auth-url="{{ url_for('get_telegram_auth_status_api') }}"
     data-security-set-telegram-auth-url="{{ url_for('set_telegram_auth_status_api') }}"
     data-security-get-root-path-url="{{ url_for('get_root_path_api') }}"
@@ -71,6 +72,9 @@
     data-ssl-toggle-url="{{ url_for('toggle_ssl_mode') }}"
     data-ssl-upload-url="{{ url_for('upload_ssl_cert') }}"
     data-ssl-paths-url="{{ url_for('set_ssl_paths') }}"
+    data-ssl-renewal-list-url="{{ url_for('list_renewal_configs') }}"
+    data-ssl-renewal-file-url="{{ url_for('get_renewal_config') }}"
+    data-ssl-save-renewal-file-url="{{ url_for('save_renewal_config') }}"
 >
 
     <!-- Alpine Tabs Container -->
@@ -120,16 +124,7 @@
                         IP Limit
                     </button>
                     
-                    <button @click="activeTab = 'warp-content'" 
-                            :class="activeTab === 'warp-content' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
-                            class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors">
-                         <div :class="activeTab === 'warp-content' ? 'bg-blue-200 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'" 
-                             class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                             <i class="fas fa-rocket text-xs"></i>
-                        </div>
-                        WARP
-                    </button>
-
+                    
                     <button @click="activeTab = 'ssl'" 
                             :class="activeTab === 'ssl' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                             class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors">
@@ -360,74 +355,6 @@
                 </div>
             </div>
 
-             <!-- WARP -->
-            <div x-cloak x-show="activeTab === 'warp-content'" id="warp-content" class="tab-pane">
-                 <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-8 text-center" id="warp_initial_controls">
-                     <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                         <i class="fas fa-rocket text-2xl"></i>
-                     </div>
-                     <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Cloudflare WARP</h3>
-                     <p class="text-zinc-500 mb-6 max-w-md mx-auto">Enhance your server's routing capabilities to access blocked content (Netflix, ChatGPT, etc.) using Cloudflare WARP.</p>
-                     
-                     <button id="warp_start_btn" type='button' class='px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium'>
-                         Install & Start WARP
-                     </button>
-                </div>
-
-                <div id="warp_active_controls" style="display:none;" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                         <div class="flex items-center gap-3">
-                            <div class="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg">
-                                <i class="fas fa-rocket"></i>
-                            </div>
-                             <h2 class="text-xl font-bold text-zinc-900 dark:text-white">WARP Configuration</h2>
-                        </div>
-                        <div class="flex gap-3">
-                             <div class="flex items-center px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Active
-                            </div>
-                            <button id="warp_stop_btn" class="text-red-500 hover:text-red-700 text-sm font-medium">Uninstall</button>
-                        </div>
-                    </div>
-
-                    <form id="warp_config_form" class="space-y-4">
-                         <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
-                             <div>
-                                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_all_traffic">Route All Traffic</label>
-                                <p class="text-xs text-zinc-500 mt-1">Route all outbound server traffic through WARP.</p>
-                             </div>
-                            <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" id="warp_all_traffic" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
-                                <label for="warp_all_traffic" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
-                            </div>
-                        </div>
-                         <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
-                             <div>
-                                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_popular_sites">Route Popular Sites</label>
-                                <p class="text-xs text-zinc-500 mt-1">Optimize routing for Netflix, Disney+, ChatGPT, etc.</p>
-                             </div>
-                             <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" id="warp_popular_sites" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
-                                <label for="warp_popular_sites" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20">
-                            <div>
-                                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block cursor-pointer" for="warp_domestic_sites">Route Domestic Sites</label>
-                                <p class="text-xs text-zinc-500 mt-1">Route domestic traffic through WARP (usually not recommended).</p>
-                             </div>
-                            <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" id="warp_domestic_sites" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer left-0 top-0 transition-transform duration-200 ease-in-out border-zinc-300 dark:border-zinc-600 checked:translate-x-full checked:border-blue-500 checked:bg-blue-500"/>
-                                <label for="warp_domestic_sites" class="toggle-label block overflow-hidden h-6 rounded-full bg-zinc-300 dark:bg-zinc-700 cursor-pointer"></label>
-                            </div>
-                        </div>
-                        <button id="warp_save_config_btn" type='button' class='w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium text-sm mt-4'>
-                            Save Configuration
-                        </button>
-                    </form>
-                </div>
-            </div>
-
             <!-- Decoy Site -->
             <div x-cloak x-show="activeTab === 'decoy'" id="decoy" class="tab-pane bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6">
                  <!-- Header -->
@@ -522,12 +449,13 @@
                              </div>
 
                              <!-- Manual Path Column -->
-                             <div class="p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-800/10">
-                                <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
-                                    <i class="fas fa-keyboard mr-2 text-orange-500"></i> Manual Certificate Paths
-                                </h3>
-                                
-                                <form id="ssl_paths_form" class="space-y-4">
+                             <div class="space-y-6">
+                                 <div class="p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-800/10">
+                                    <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
+                                        <i class="fas fa-keyboard mr-2 text-orange-500"></i> Manual Certificate Paths
+                                    </h3>
+                                    
+                                    <form id="ssl_paths_form" class="space-y-4">
                                     <div>
                                         <label for="custom_cert_path" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-2">Absolute Path to Certificate</label>
                                         <input type="text" id="custom_cert_path" value="{{ custom_cert }}" class="form-control w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400" placeholder="/etc/hysteria/mycert.crt">
@@ -541,7 +469,16 @@
                                     </button>
                                 </form>
                              </div>
-                        </div>
+                             <div class="p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-800/10">
+                                <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
+                                    <i class="fas fa-edit mr-2 text-cyan-500"></i> Certbot Renewal Config
+                                </h3>
+                                <p class="text-xs text-zinc-500 mb-4">Edit Certbot renewal configuration (e.g., for UFW hooks).</p>
+                                <button id="edit_renewal_config_btn" type="button" class="w-full py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium text-sm">
+                                    Edit Configuration
+                                </button>
+                            </div>
+                        </div>                        </div>
 
                         <!-- Found Certs -->
                         <div class="p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30">
@@ -716,8 +653,55 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Panel Update Section -->
+                <div class="mt-8 mb-4">
+                     <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-sync-alt mr-2 text-green-500"></i> Software Updates
+                    </h3>
+                    <div class="bg-zinc-50 dark:bg-zinc-800/30 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                                <h4 class="font-medium text-zinc-900 dark:text-white text-sm">Update Panel</h4>
+                                <p class="text-xs text-zinc-500 mt-1">Update the panel to the latest version from the repository. Service will restart.</p>
+                            </div>
+                            <button id="update_panel_btn" type='button' class='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-lg shadow-green-500/20 transition-all font-medium text-sm flex items-center gap-2'>
+                                <i class="fas fa-cloud-download-alt"></i> Update Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+        </div>
+    </div>
+</div>
+
+<!-- Renewal Config Modal -->
+<div id="renewalConfigModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl p-6 w-full max-w-2xl transform transition-all border border-zinc-200 dark:border-zinc-800 flex flex-col h-[80vh]">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-zinc-900 dark:text-white">Edit Renewal Configuration</h3>
+            <button onclick="document.getElementById('renewalConfigModal').classList.add('hidden')" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="mb-4">
+             <label for="renewal_file_select" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Select Config File</label>
+             <div class="relative">
+                 <select id="renewal_file_select" class="appearance-none w-full px-4 py-2 pr-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all cursor-pointer"></select>
+                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500 dark:text-zinc-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                 </div>
+             </div>
+        </div>
+
+        <div class="flex-1 min-h-0 mb-4">
+            <textarea id="renewal_config_content" class="w-full h-full p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 text-zinc-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="document.getElementById('renewalConfigModal').classList.add('hidden')" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Cancel</button>
+            <button type="button" id="save_renewal_config_btn" class="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Changes</button>
         </div>
     </div>
 </div>

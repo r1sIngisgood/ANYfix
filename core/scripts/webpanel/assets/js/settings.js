@@ -3,6 +3,7 @@ $(document).ready(function () {
 
     const API_URLS = {
         serverServicesStatus: contentSection.dataset.serverServicesStatusUrl,
+        updatePanel: contentSection.dataset.updatePanelUrl,
         getIp: contentSection.dataset.getIpUrl,
         getAllNodes: contentSection.dataset.getAllNodesUrl,
         addNode: contentSection.dataset.addNodeUrl,
@@ -36,10 +37,6 @@ $(document).ready(function () {
         stopIpLimit: contentSection.dataset.stopIpLimitUrl,
         cleanIpLimit: contentSection.dataset.cleanIpLimitUrl,
         configIpLimit: contentSection.dataset.configIpLimitUrl,
-        statusWarp: contentSection.dataset.statusWarpUrl,
-        installWarp: contentSection.dataset.installWarpUrl,
-        uninstallWarp: contentSection.dataset.uninstallWarpUrl,
-        configureWarp: contentSection.dataset.configureWarpUrl,
         
         // Security
         securityChangeCredentials: contentSection.dataset.securityChangeCredentialsUrl,
@@ -52,12 +49,16 @@ $(document).ready(function () {
         // SSL
         sslToggle: contentSection.dataset.sslToggleUrl,
         sslUpload: contentSection.dataset.sslUploadUrl,
-        sslPaths: contentSection.dataset.sslPathsUrl
+        sslPaths: contentSection.dataset.sslPathsUrl,
+        sslRenewalList: contentSection.dataset.sslRenewalListUrl,
+        sslRenewalFile: contentSection.dataset.sslRenewalFileUrl,
+        sslSaveRenewalFile: contentSection.dataset.sslSaveRenewalFileUrl
     };
 
     initUI();
     initSecurity();
     initSSL();
+    initCertbotConfig();
     fetchDecoyStatus();
     fetchNodes();
     fetchExtraConfigs();
@@ -510,9 +511,8 @@ $(document).ready(function () {
          const servicesMap = {
             "hysteria_telegram_bot": "#telegram_form",
             "hysteria_normal_sub": "#normal_sub_service_form",
-            "hysteria_iplimit": "#ip-limit-service",
-            "hysteria_warp": "#warp_service"
-        };
+              "hysteria_iplimit": "#ip-limit-service"
+          };
 
         Object.keys(servicesMap).forEach(serviceKey => {
             let isRunning = data[serviceKey];
@@ -606,19 +606,6 @@ $(document).ready(function () {
                    $("#block_duration").val("");
                    $("#max_ips").val("");
                    $("#block_duration, #max_ips").removeClass('is-invalid');
-                }
-            } else if (serviceKey === "hysteria_warp") {
-                const isWarpServiceRunning = data[serviceKey];
-                if (isWarpServiceRunning) {
-                    $("#warp_initial_controls").hide();
-                    $("#warp_active_controls").show();
-                    fetchWarpFullStatusAndConfig();
-                } else {
-                    $("#warp_initial_controls").show();
-                    $("#warp_active_controls").hide();
-                    if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
                 }
             }
         });
@@ -1112,88 +1099,9 @@ $(document).ready(function () {
         });
     }
 
-    function fetchWarpFullStatusAndConfig() {
-        $.ajax({
-            url: API_URLS.statusWarp,
-            type: "GET",
-            success: function (data) {
-                $("#warp_all_traffic").prop('checked', data.all_traffic_via_warp || false);
-                $("#warp_popular_sites").prop('checked', data.popular_sites_via_warp || false);
-                $("#warp_domestic_sites").prop('checked', data.domestic_sites_via_warp || false);
-                $("#warp_block_adult_sites").prop('checked', data.block_adult_content || false);
 
-                $("#warp_initial_controls").hide();
-                $("#warp_active_controls").show();
-            },
-            error: function (xhr, status, error) {
-                let errorMsg = "Failed to fetch WARP configuration.";
-                 if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    errorMsg = xhr.responseJSON.detail;
-                }
-                console.error("Error fetching WARP config:", errorMsg, xhr.responseText);
 
-                if (xhr.status === 404) {
-                    $("#warp_initial_controls").show();
-                    $("#warp_active_controls").hide();
-                    if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
-                    Swal.fire("Info", "WARP service might not be fully configured. Please try reinstalling if issues persist.", "info");
-                } else {
-                     if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
-                     Swal.fire("Warning", "Could not load current WARP configuration values. Please check manually or re-save.", "warning");
-                }
-            }
-        });
-    }
 
-    $("#warp_start_btn").on("click", function() {
-        confirmAction("install and start WARP", function () {
-            sendRequest(
-                API_URLS.installWarp,
-                "POST",
-                null,
-                "WARP installation request sent. The page will reload.",
-                "#warp_start_btn",
-                true
-            );
-        });
-    });
-
-    $("#warp_stop_btn").on("click", function() {
-        confirmAction("stop and uninstall WARP", function () {
-            sendRequest(
-                API_URLS.uninstallWarp,
-                "DELETE",
-                null,
-                "WARP uninstallation request sent. The page will reload.",
-                "#warp_stop_btn",
-                true
-            );
-        });
-    });
-
-    $("#warp_save_config_btn").on("click", function() {
-        const configData = {
-            all: $("#warp_all_traffic").is(":checked"),
-            popular_sites: $("#warp_popular_sites").is(":checked"),
-            domestic_sites: $("#warp_domestic_sites").is(":checked"),
-            block_adult_sites: $("#warp_block_adult_sites").is(":checked")
-        };
-        confirmAction("save WARP configuration", function () {
-            sendRequest(
-                API_URLS.configureWarp,
-                "POST",
-                configData,
-                "WARP configuration saved successfully!",
-                "#warp_save_config_btn",
-                false,
-                fetchWarpFullStatusAndConfig
-            );
-        });
-    });
 
     $("#telegram_start").on("click", startTelegram);
     $("#telegram_stop").on("click", stopTelegram);
@@ -1833,4 +1741,140 @@ $(document).ready(function () {
             });
         });
     }
+
+    // Update Panel
+    const updatePanelBtn = document.getElementById('update_panel_btn');
+    if (updatePanelBtn) {
+        updatePanelBtn.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Update Panel?',
+                text: "This will download the latest version and restart the panel service. Connection may be lost briefly.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#71717a',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Updating...',
+                        text: 'Triggering update process in background. The panel will restart shortly.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        timer: 3000,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: API_URLS.updatePanel,
+                        type: 'POST',
+                        success: function(response) {
+                             // Wait a bit then show success
+                             setTimeout(() => {
+                                Swal.fire({
+                                    title: 'Update Started!',
+                                    text: 'The update command has been sent. Please check the logs or wait a minute before reloading.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                });
+                             }, 1000);
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to start update.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function initCertbotConfig() {
+        // Modal references
+        const modal = document.getElementById('renewalConfigModal');
+        const select = document.getElementById('renewal_file_select');
+        const textarea = document.getElementById('renewal_config_content');
+        const saveBtn = document.getElementById('save_renewal_config_btn');
+        const editBtn = document.getElementById('edit_renewal_config_btn');
+
+        if (!editBtn || !modal) return;
+
+        // Open Modal Handler
+        editBtn.addEventListener('click', () => {
+             modal.classList.remove('hidden');
+             // Load list
+             $.ajax({
+                 url: API_URLS.sslRenewalList,
+                 type: 'GET',
+                 success: function(data) {
+                     select.innerHTML = '';
+                     if (data.files && data.files.length > 0) {
+                         data.files.forEach(f => {
+                             const opt = document.createElement('option');
+                             opt.value = f;
+                             opt.text = f;
+                             select.appendChild(opt);
+                         });
+                         // Trigger load of first file
+                         if (select.value) $(select).trigger('change');
+                     } else {
+                         select.innerHTML = '<option value="">No config files found</option>';
+                         textarea.value = '';
+                     }
+                 },
+                 error: function() {
+                     Swal.fire('Error', 'Failed to list renewal configs.', 'error');
+                 }
+             });
+        });
+
+        // Load content on change
+        $(select).on('change', () => {
+             const filename = select.value;
+             if (!filename) return;
+
+             textarea.value = 'Loading...';
+             
+             $.ajax({
+                 url: API_URLS.sslRenewalFile + '?filename=' + encodeURIComponent(filename),
+                 type: 'GET',
+                 success: function(data) {
+                     textarea.value = data.content;
+                 },
+                 error: function() {
+                     textarea.value = 'Error loading file content.';
+                 }
+             });
+        });
+
+        // Save Content
+        saveBtn.addEventListener('click', () => {
+             const filename = select.value;
+             const content = textarea.value;
+             
+             if (!filename) return;
+
+             Swal.fire({
+                 title: 'Saving...',
+                 didOpen: () => Swal.showLoading()
+             });
+
+             $.ajax({
+                 url: API_URLS.sslSaveRenewalFile,
+                 type: 'POST',
+                 contentType: 'application/json',
+                 data: JSON.stringify({ filename: filename, content: content }),
+                 success: function() {
+                     Swal.fire('Success', 'Configuration saved.', 'success');
+                     modal.classList.add('hidden');
+                 },
+                 error: function(xhr) {
+                     Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to save.', 'error');
+                 }
+             });
+        });
+    }
+
 });

@@ -783,61 +783,7 @@ webpanel_handler() {
                         read -p "Use self-signed certificate? (Recommended for Cloudflare Full SSL) [y/n]: " use_self_signed
                         case "$use_self_signed" in
                             y|Y) self_signed_flag="--self-signed"; break ;;
-                            n|N) 
-                                self_signed_flag=""
-                                
-                                # Ask for Certbot
-                                echo ""
-                                read -p "Do you want to generate a trusted certificate using Certbot (Let's Encrypt)? [y/n]: " use_certbot
-                                if [[ "$use_certbot" =~ ^[Yy]$ ]]; then
-                                    if ! command -v certbot &> /dev/null; then
-                                        echo -e "${yellow}Certbot is not installed. Installing...${NC}"
-                                        apt-get update -qq && apt-get install -y certbot -qq
-                                    fi
-
-                                    local cert_email="anypanel@mail.ru"
-                                    
-                                    echo -e "${blue}Stopping standard web servers to free up port 80/443...${NC}"
-                                    systemctl stop nginx &>/dev/null || true
-                                    systemctl stop apache2 &>/dev/null || true
-                                    
-                                    echo -e "${blue}Requesting certificate for $domain using email $cert_email...${NC}"
-                                    if certbot certonly --standalone --agree-tos --non-interactive --email "$cert_email" -d "$domain"; then
-                                        echo -e "${green}Certificate obtained successfully!${NC}"
-                                        mkdir -p /etc/hysteria
-                                        ln -sf "/etc/letsencrypt/live/$domain/fullchain.pem" "/etc/hysteria/$domain.crt"
-                                        ln -sf "/etc/letsencrypt/live/$domain/privkey.pem" "/etc/hysteria/$domain.key"
-                                        chmod 644 "/etc/letsencrypt/live/$domain/fullchain.pem"
-                                    else
-                                        echo -e "${red}Failed to obtain certificate via Certbot.${NC}"
-                                        echo -e "${yellow}Check that your domain points to this IP and ports 80/443 are open.${NC}"
-                                        echo -e "${yellow}Falling back to standard Caddy automatic HTTPS (or self-signed if configured later).${NC}"
-                                    fi
-                                fi
-                                
-                                # Check if certs exist in /etc/hysteria matching domain
-                                if [[ ! -f "/etc/hysteria/$domain.crt" && ! -f "/etc/hysteria/$domain.key" ]]; then
-                                    echo ""
-                                    echo -e "${yellow}Checking for existing certificates...${NC}"
-                                    # Try to find any pair
-                                    found_crt=$(find /etc/hysteria -maxdepth 1 -name "*.crt" ! -name "ca.crt" | head -n 1)
-                                    found_key=$(find /etc/hysteria -maxdepth 1 -name "*.key" ! -name "ca.key" | head -n 1)
-                                    
-                                    if [[ -n "$found_crt" && -n "$found_key" ]]; then
-                                        echo -e "Found certificate pair: $(basename $found_crt) / $(basename $found_key)"
-                                        read -p "Do you want to use this certificate for $domain? [y/n]: " use_existing
-                                        if [[ "$use_existing" =~ ^[Yy]$ ]]; then
-                                             ln -sf "$found_crt" "/etc/hysteria/$domain.crt"
-                                             ln -sf "$found_key" "/etc/hysteria/$domain.key"
-                                             echo -e "${green}Linked successfully using standard naming.${NC}"
-                                        fi
-                                    else
-                                        echo -e "${yellow}No valid certificates found in /etc/hysteria matching standard names.${NC}"
-                                        echo -e "Please ensure your certificates are named '${domain}.crt' and '${domain}.key' in /etc/hysteria/ or use the Web Panel settings to configure paths manually."
-                                    fi
-                                fi   
-                                break 
-                                ;;
+                            n|N) self_signed_flag=""; break ;;
                             *) echo "Please answer y or n." ;;
                         esac
                     done
