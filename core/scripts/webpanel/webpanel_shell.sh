@@ -547,6 +547,41 @@ stop_service() {
     rm -f "$CADDY_CONFIG_FILE"
 }
 
+restart_webpanel() {
+    echo "Restarting web panel service..."
+    # Restart in background to avoid killing the script execution immediately (API needs to return success first)
+    nohup bash -c "sleep 2 && systemctl restart hysteria-webpanel.service" >/dev/null 2>&1 &
+}
+
+set_telegram_auth_status() {
+    local status=$1
+    if [ "$status" != "true" ] && [ "$status" != "false" ]; then
+        echo -e "${red}Error: Invalid status. Use 'true' or 'false'.${NC}"
+        exit 1
+    fi
+    
+    # Ensure file ends with newline to prevent concatenation issues
+    if [ -s "$WEBPANEL_ENV_FILE" ] && [ "$(tail -c 1 "$WEBPANEL_ENV_FILE")" != "" ]; then
+        echo "" >> "$WEBPANEL_ENV_FILE"
+    fi
+
+    # Check for old variable and fix it
+    if grep -q "^TELEGRAM_AUTH=" "$WEBPANEL_ENV_FILE"; then
+        sed -i "s/^TELEGRAM_AUTH=/TELEGRAM_AUTH_ENABLED=/" "$WEBPANEL_ENV_FILE"
+    fi
+
+    # Update TELEGRAM_AUTH_ENABLED
+    if grep -q "TELEGRAM_AUTH_ENABLED=" "$WEBPANEL_ENV_FILE"; then
+         sed -i "s/^TELEGRAM_AUTH_ENABLED=.*/TELEGRAM_AUTH_ENABLED=$status/" "$WEBPANEL_ENV_FILE"
+    else
+         echo "TELEGRAM_AUTH_ENABLED=$status" >> "$WEBPANEL_ENV_FILE"
+    fi
+    echo -e "${green}Telegram 2FA status updated to: $status${NC}"
+
+    # Restart
+    restart_webpanel
+}
+
 case "$1" in
     start)
         if [ -z "$2" ] || [ -z "$3" ]; then
@@ -588,8 +623,11 @@ case "$1" in
     api-token)
         show_webpanel_api_token
         ;;
+    settelegramauth)
+        set_telegram_auth_status "$2"
+        ;;
     *)
-        echo -e "${red}Usage: $0 {start|stop|decoy|stopdecoy|resetcreds|changeexp|changeroot|changedomain|url|api-token} [options]${NC}"
+        echo -e "${red}Usage: $0 {start|stop|decoy|stopdecoy|resetcreds|changeexp|changeroot|changedomain|url|api-token|settelegramauth} [options]${NC}"
         echo -e "${yellow}start <DOMAIN> <PORT> [ADMIN_USERNAME] [ADMIN_PASSWORD] [EXPIRATION_MINUTES] [DEBUG] [DECOY_PATH]${NC}"
         echo -e "${yellow}stop${NC}"
         echo -e "${yellow}decoy <DOMAIN> <PATH_TO_DECOY_SITE>${NC}"

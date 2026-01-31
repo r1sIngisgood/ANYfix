@@ -556,6 +556,14 @@
                             </button>
                             <input type="file" id="backup_file" accept=".zip" class="hidden">
                          </div>
+
+                        <!-- Progress Bar for Restore -->
+                        <div class="mt-3" style="display:none;">
+                            <div class="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                                <div id="backup_progress_bar" class="h-full bg-blue-600 transition-all duration-300" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div id="backup_status" class="mt-1 text-xs text-center text-zinc-500"></div>
+                        </div>
                      </div>
                 </div>
 

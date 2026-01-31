@@ -1111,7 +1111,8 @@ $(document).ready(function () {
     $("#normal_subpath_save_btn").on("click", saveNormalSubConfig);
     $("#ip_change").on("click", saveIP);
     $("#download_backup").on("click", downloadBackup);
-    $("#upload_backup").on("click", uploadBackup);
+    // Bind to the file input change event, not a non-existent button
+    $("#backup_file").on("change", uploadBackup);
     $("#ip_limit_start").on("click", startIPLimit);
     $("#ip_limit_stop").on("click", stopIPLimit);
     $("#ip_limit_clean").on("click", cleanIPLimit);
