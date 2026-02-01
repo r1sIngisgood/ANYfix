@@ -407,22 +407,24 @@ def server_info() -> str | None:
     return run_cmd(['python3', Command.SERVER_INFO.value])
 
 
-def get_ip_address() -> tuple[str | None, str | None]:
+def get_ip_address() -> tuple[str | None, str | None, str | None]:
     env_vars = dotenv_values(CONFIG_ENV_FILE)
 
-    return env_vars.get('IP4'), env_vars.get('IP6')
+    return env_vars.get('IP4'), env_vars.get('IP6'), env_vars.get('SERVER_NAME')
 
 
 def add_ip_address():
     run_cmd(['python3', Command.IP_ADD.value, 'add'])
 
 
-def edit_ip_address(ipv4: str, ipv6: str):
+def edit_ip_address(ipv4: str, ipv6: str, server_name: str = None):
 
     if ipv4:
         run_cmd(['python3', Command.IP_ADD.value, 'edit', '-4', ipv4])
     if ipv6:
         run_cmd(['python3', Command.IP_ADD.value, 'edit', '-6', ipv6])
+    if server_name is not None:
+        run_cmd(['python3', Command.IP_ADD.value, 'edit', '-n', server_name])
 
 def add_node(name: str, ip: str, sni: Optional[str] = None, pinSHA256: Optional[str] = None, port: Optional[int] = None, obfs: Optional[str] = None, insecure: Optional[bool] = None, location: Optional[str] = None):
     command = ['python3', Command.NODE_MANAGER.value, 'add', '--name', name, '--ip', ip]
@@ -860,10 +862,18 @@ def change_webpanel_root_path(new_path: str):
 
 
 def update_panel():
-    full_cmd = "bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade2.sh)"
-    run_cmd(['bash', '-c', full_cmd])
+    # Use piping instead of process substitution for better compatibility
+    # Log output to /tmp for debugging and set TERM to avoid tput errors
+    full_cmd = "nohup bash -c 'export TERM=xterm; curl -sL https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade2.sh | bash' > /tmp/hysteria_panel_update.log 2>&1 &"
+    kwargs = {}
+    if os.name != 'nt':
+        kwargs['preexec_fn'] = os.setsid
+    subprocess.Popen(full_cmd, shell=True, executable='/bin/bash', **kwargs)
 
 def update_panel_beta():
-     full_cmd = "bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/dev/upgrade2.sh)"
-     run_cmd(['bash', '-c', full_cmd])
+     full_cmd = "nohup bash -c 'export TERM=xterm; curl -sL https://raw.githubusercontent.com/0xd5f/ANY/dev/upgrade2.sh | bash' > /tmp/hysteria_panel_update.log 2>&1 &"
+     kwargs = {}
+     if os.name != 'nt':
+        kwargs['preexec_fn'] = os.setsid
+     subprocess.Popen(full_cmd, shell=True, executable='/bin/bash', **kwargs)
 

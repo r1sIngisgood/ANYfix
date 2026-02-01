@@ -36,18 +36,20 @@ def load_nodes() -> List[Dict[str, Any]]:
 def load_hysteria2_env() -> Dict[str, str]:
     return load_env_file(CONFIG_ENV)
 
-def load_hysteria2_ips() -> Tuple[str, str, str]:
+def load_hysteria2_ips() -> Tuple[str, str, str, str]:
     env_vars = load_hysteria2_env()
     ip4 = env_vars.get('IP4', 'None')
     ip6 = env_vars.get('IP6', 'None')
     sni = env_vars.get('SNI', '')
-    return ip4, ip6, sni
+    server_name = env_vars.get('SERVER_NAME', '')
+    return ip4, ip6, sni, server_name
 
 def get_singbox_domain_and_port() -> Tuple[str, str]:
     env_vars = load_env_file(SINGBOX_ENV)
     domain = env_vars.get('HYSTERIA_DOMAIN', '')
     port = env_vars.get('HYSTERIA_PORT', '')
     return domain, port
+
 
 def get_normalsub_domain_and_port() -> Tuple[str, str, str]:
     env_vars = load_env_file(NORMALSUB_ENV)
@@ -148,21 +150,29 @@ def show_uri(args: argparse.Namespace) -> None:
     local_obfs_password = config.get("obfs", {}).get("salamander", {}).get("password", "")
     local_insecure = config.get("tls", {}).get("insecure", True)
     
-    ip4, ip6, local_sni = load_hysteria2_ips()
+    ip4, ip6, local_sni, server_name = load_hysteria2_ips()
     nodes = load_nodes()
     terminal_width = get_terminal_width()
 
     if args.all or args.ip_version == 4:
         if ip4 and ip4 != "None":
+            tag = server_name if server_name else "IPv4"
+            if server_name and (args.all and ip6 and ip6 != "None"):
+                  tag = f"{server_name} (IPv4)"
+            
             uri = generate_uri(args.username, auth_password, ip4, local_port, 
-                                 local_obfs_password, local_sha256, local_sni, 4, local_insecure, "IPv4")
-            display_uri_and_qr(uri, "IPv4", args, terminal_width)
+                                 local_obfs_password, local_sha256, local_sni, 4, local_insecure, tag)
+            display_uri_and_qr(uri, tag, args, terminal_width)
             
     if args.all or args.ip_version == 6:
         if ip6 and ip6 != "None":
+            tag = server_name if server_name else "IPv6"
+            if server_name and (args.all and ip4 and ip4 != "None"):
+                  tag = f"{server_name} (IPv6)"
+
             uri = generate_uri(args.username, auth_password, ip6, local_port, 
-                                 local_obfs_password, local_sha256, local_sni, 6, local_insecure, "IPv6")
-            display_uri_and_qr(uri, "IPv6", args, terminal_width)
+                                 local_obfs_password, local_sha256, local_sni, 6, local_insecure, tag)
+            display_uri_and_qr(uri, tag, args, terminal_width)
 
     for node in nodes:
         node_name = node.get("name")

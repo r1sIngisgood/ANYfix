@@ -97,21 +97,24 @@ def add_ips():
     print(f"Updated IP6={ipv6 or 'Not Found'}")
 
 
-def edit_ip(option: str, new_ip: str):
+def edit_ip(option: str, value: str):
     ensure_env_file_exists()
     if option == "-4":
-        update_config("IP4", new_ip)
-        print(f"IP4 has been updated to {new_ip}.")
+        update_config("IP4", value)
+        print(f"IP4 has been updated to {value}.")
     elif option == "-6":
-        update_config("IP6", new_ip)
-        print(f"IP6 has been updated to {new_ip}.")
+        update_config("IP6", value)
+        print(f"IP6 has been updated to {value}.")
+    elif option == "-n":
+        update_config("SERVER_NAME", value)
+        print(f"SERVER_NAME has been updated to {value}.")
     else:
-        print("Invalid option. Use -4 for IPv4 or -6 for IPv6.")
+        print("Invalid option. Use -4 for IPv4, -6 for IPv6, or -n for Server Name.")
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: {add|edit -4|-6 <new_ip>}")
+        print("Usage: {add|edit -4|-6|-n <value>}")
         sys.exit(1)
 
     action = sys.argv[1]
@@ -121,7 +124,7 @@ def main():
     elif action == "edit" and len(sys.argv) == 4:
         edit_ip(sys.argv[2], sys.argv[3])
     else:
-        print("Usage: {add|edit -4|-6 <new_ip>}")
+        print("Usage: {add|edit -4|-6|-n <value>}")
         sys.exit(1)
 
 

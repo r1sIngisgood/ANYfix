@@ -11,6 +11,7 @@
 <div class='content'
     data-domain="{{ domain }}"
     data-port="{{ port }}"
+    data-root-path="{{ root_path }}"
     
     data-server-services-status-url="{{ url_for('server_services_status_api') }}"
     
@@ -534,6 +535,9 @@
                             </div>
                              <div>
                                 <input type="text" id="ipv6" value="{{ ipv6 or '' }}" class="form-control w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm" placeholder="IPv6 / Domain">
+                            </div>
+                             <div>
+                                <input type="text" id="server_name" value="{{ server_name or '' }}" class="form-control w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm" placeholder="Server Name (Optional)">
                             </div>
                              <button id="ip_change" type='button' class='w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-all font-medium text-xs'>Update IPs</button>
                         </form>

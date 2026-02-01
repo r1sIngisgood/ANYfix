@@ -959,11 +959,12 @@ $(document).ready(function () {
         if (!validateForm('change_ip_form')) return;
         const ipv4 = $("#ipv4").val().trim() || null;
         const ipv6 = $("#ipv6").val().trim() || null;
+        const server_name = $("#server_name").val().trim();
         confirmAction("save the new IP settings", function () {
             sendRequest(
                 API_URLS.editIp,
                 "POST",
-                { ipv4: ipv4, ipv6: ipv6 },
+                { ipv4: ipv4, ipv6: ipv6, server_name: server_name },
                 "IP settings saved successfully!",
                 "#ip_change"
             );
@@ -1518,8 +1519,11 @@ $(document).ready(function () {
         // Domain & Port Logic
         const currentDomain = contentSection.dataset.domain;
         const currentPort = contentSection.dataset.port;
+        const currentRootPath = contentSection.dataset.rootPath;
+        
         if (currentDomain) $('#panel_domain').val(currentDomain);
         if (currentPort) $('#panel_port').val(currentPort);
+        if (currentRootPath) $('#root_path_input').val(currentRootPath);
 
         $('#save_domain_port_btn').click(function() {
             const domain = $('#panel_domain').val().trim();
