@@ -19,6 +19,8 @@ $(document).ready(function () {
         normalSubGetProfileTitle: contentSection.dataset.normalSubGetProfileTitleUrl,
         normalSubEditSupportUrl: contentSection.dataset.normalSubEditSupportUrlUrl,
         normalSubGetSupportUrl: contentSection.dataset.normalSubGetSupportUrlUrl,
+        normalSubEditAnnounce: contentSection.dataset.normalSubEditAnnounceUrl,
+        normalSubGetAnnounce: contentSection.dataset.normalSubGetAnnounceUrl,
         normalSubEditShowUsername: contentSection.dataset.normalSubEditShowUsernameUrl,
         normalSubGetShowUsername: contentSection.dataset.normalSubGetShowUsernameUrl,
         setupDecoy: contentSection.dataset.setupDecoyUrl,
@@ -617,14 +619,45 @@ $(document).ready(function () {
             type: "GET",
             success: function (data) {
                 $("#normal_subpath_input").val(data.subpath || "");
-                if (data.subpath) {
-                    $("#normal_subpath_input").removeClass('is-invalid');
-                }
+                if (data.subpath) $("#normal_subpath_input").removeClass('is-invalid');
             },
-            error: function (xhr, status, error) {
-                console.error("Failed to fetch NormalSub subpath:", error, xhr.responseText);
-                $("#normal_subpath_input").val("");
-            }
+            error: function (xhr) { console.error("Failed to fetch NormalSub subpath:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetProfileTitle,
+            type: "GET",
+            success: function (data) {
+                $("#normal_profile_title_input").val(data.title || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch profile title:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetSupportUrl,
+            type: "GET",
+            success: function (data) {
+                $("#normal_support_url_input").val(data.url || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch support url:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetAnnounce,
+            type: "GET",
+            success: function (data) {
+                $("#normal_announce_input").val(data.announce || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch announce:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetShowUsername,
+            type: "GET",
+            success: function (data) {
+                $("#normal_show_username_check").prop('checked', data.enabled);
+            },
+            error: function (xhr) { console.error("Failed to fetch show username setting:", xhr); }
         });
     }
 
@@ -848,6 +881,7 @@ $(document).ready(function () {
         const subpath = $("#normal_subpath_input").val();
         const profileTitle = $("#normal_profile_title_input").val();
         const supportUrl = $("#normal_support_url_input").val();
+        const announce = $("#normal_announce_input").val();
         const showUsername = $("#normal_show_username_check").is(":checked");
 
         let subpathValid = isValidSubPath(subpath);
@@ -894,9 +928,23 @@ $(document).ready(function () {
                                         contentType: 'application/json',
                                         data: JSON.stringify({ url: supportUrl }),
                                         success: function() {
-                                             Swal.fire("Success!", "Settings updated successfully!", "success");
-                                             btn.prop('disabled', false);
-                                             btn.find('.spinner-border').hide();
+                                            // Then edit announce
+                                            $.ajax({
+                                                url: API_URLS.normalSubEditAnnounce,
+                                                type: 'PUT',
+                                                contentType: 'application/json',
+                                                data: JSON.stringify({ announce: announce }),
+                                                success: function() {
+                                                     Swal.fire("Success!", "Settings updated successfully!", "success");
+                                                     btn.prop('disabled', false);
+                                                     btn.find('.spinner-border').hide();
+                                                },
+                                                error: function (xhr) {
+                                                    handleAjaxError(xhr, "Failed to update announce. Other settings matched.");
+                                                    btn.prop('disabled', false);
+                                                    btn.find('.spinner-border').hide();
+                                                }
+                                            });
                                         },
                                         error: function (xhr) {
                                             handleAjaxError(xhr, "Failed to update support URL. Other settings matched.");

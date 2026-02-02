@@ -4,7 +4,8 @@ from ..schema.config.normalsub import (
     StartInputBody, EditSubPathInputBody, GetSubPathResponse, 
     EditProfileTitleInputBody, GetProfileTitleResponse,
     EditShowUsernameInputBody, GetShowUsernameResponse,
-    EditSupportUrlInputBody, GetSupportUrlResponse
+    EditSupportUrlInputBody, GetSupportUrlResponse,
+    EditAnnounceInputBody, GetAnnounceResponse
 )
 import cli_api
 
@@ -82,6 +83,22 @@ async def normal_sub_get_support_url_api():
         return GetSupportUrlResponse(url=current_url)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Error retrieving support URL: {str(e)}')
+
+@router.put('/edit_announce', response_model=DetailResponse, summary='Edit NormalSub Announce')
+async def normal_sub_edit_announce_api(body: EditAnnounceInputBody):
+    try:
+        cli_api.edit_normalsub_announce(body.announce)
+        return DetailResponse(detail=f'Normalsub announce updated successfully.')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
+
+@router.get('/announce', response_model=GetAnnounceResponse, summary='Get Current NormalSub Announce')
+async def normal_sub_get_announce_api():
+    try:
+        current_announce = cli_api.get_normalsub_announce()
+        return GetAnnounceResponse(announce=current_announce)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Error retrieving announce: {str(e)}')
 
 @router.put('/edit_show_username', response_model=DetailResponse, summary='Edit NormalSub Show Username')
 async def normal_sub_edit_show_username_api(body: EditShowUsernameInputBody):

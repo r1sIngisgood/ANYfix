@@ -65,6 +65,8 @@
     data-normal-sub-get-profile-title-url="{{ url_for('normal_sub_get_profile_title_api') }}"
     data-normal-sub-edit-support-url-url="{{ url_for('normal_sub_edit_support_url_api') }}"
     data-normal-sub-get-support-url-url="{{ url_for('normal_sub_get_support_url_api') }}"
+    data-normal-sub-edit-announce-url="{{ url_for('normal_sub_edit_announce_api') }}"
+    data-normal-sub-get-announce-url="{{ url_for('normal_sub_get_announce_api') }}"
     data-normal-sub-edit-show-username-url="{{ url_for('normal_sub_edit_show_username_api') }}"
     data-normal-sub-get-show-username-url="{{ url_for('normal_sub_get_show_username_api') }}"
     data-normal-sub-start-url="{{ url_for('normal_sub_start_api') }}"
@@ -227,6 +229,10 @@
                              <div class="mb-4">
                                 <label for="normal_support_url_input" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Support / Info URL</label>
                                 <input type="text" id="normal_support_url_input" class="form-control w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-zinc-400" placeholder="e.g., https://t.me/support">
+                             </div>
+                             <div class="mb-4">
+                                <label for="normal_announce_input" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Announce Text</label>
+                                <textarea id="normal_announce_input" rows="3" class="form-control w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-zinc-400" placeholder="e.g., Bot - @mybot"></textarea>
                              </div>
                              <div class="mb-6 flex items-center gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
                                 <div class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">

@@ -42,6 +42,7 @@ class AppConfig:
     profile_title: str
     show_username: bool
     support_url: str
+    announce: str # New Field
 
 
 
@@ -141,6 +142,7 @@ class TemplateContext:
     status: str
     sublink_qrcode: str
     sub_link: str
+    happ_sub_link: str # Add this field
     sub_link_encoded: str
     profile_title_encoded: str
     blocked: bool = False
@@ -450,8 +452,19 @@ class SubscriptionManager:
             
         profile_lines = f"//profile-title: {title_str}\n//profile-update-interval: 1\n"
         
+        if self.config.announce:
+            try:
+                encoded_announce_body = base64.b64encode(self.config.announce.encode('utf-8')).decode('utf-8')
+                profile_lines += f"#announce: base64:{encoded_announce_body}\n"
+            except Exception:
+                pass
+        
+        port_str = f":{self.config.external_port}" if self.config.external_port not in [80, 443, 0] else ""
+        web_page_url = f"https://{self.config.domain}{port_str}/{self.config.subpath}/{user_info.password}"
+        
+        profile_lines += f"//profile-web-page-url: {web_page_url}\n"
+
         if self.config.support_url:
-            profile_lines += f"//profile-web-page-url: {self.config.support_url}\n"
             profile_lines += f"//support-url: {self.config.support_url}\n"
             
         return profile_lines + subscription_info + "\n".join(all_processed_uris)
@@ -487,6 +500,7 @@ class HysteriaServer:
         base_path = f'/{safe_subpath}'
         self.app.router.add_get(f'{base_path}/style.css', self.handle_style)
         self.app.router.add_get(f'{base_path}/script.js', self.handle_script)
+        self.app.router.add_get(f'{base_path}/happ/{{password_token}}', self.handle_force_sub)
         self.app.router.add_get(f'{base_path}/{{password_token}}', self.handle)
         self.app.router.add_get(f'{base_path}/robots.txt', self.robots_handler)
         self.app.router.add_route('*', f'{base_path}/{{tail:.*}}', self.handle_404_subpath)
@@ -520,6 +534,26 @@ class HysteriaServer:
         if not support_url:
             support_url = panel_config.get('SUPPORT_URL', '')
 
+        announce = os.getenv('ANNOUNCE', '')
+        if not announce:
+             announce = panel_config.get('ANNOUNCE', '')
+        
+        # Decode announce if it is base64 (since it is stored as base64 in env)
+        if announce:
+            try:
+                # Try to decode to see if it's base64
+                # We need to distinguish between plain text and base64.
+                # Since cli_api writes base64, we assume it's base64.
+                # But if user manually wrote plain text, we might break it.
+                # Simple heuristic: if it decodes nicely to utf-8, use it.
+                # However, for now, let's assume we need to decode it if it was written by our tool.
+                # Actually, env vars are strings.
+                decoded_announce = base64.b64decode(announce).decode('utf-8')
+                announce = decoded_announce
+            except Exception:
+                # If decode fails, assume it's plain text (legacy)
+                pass
+
         return AppConfig(domain=domain, external_port=external_port,
                          aiohttp_listen_address=aiohttp_listen_address,
                          aiohttp_listen_port=aiohttp_listen_port,
@@ -531,7 +565,7 @@ class HysteriaServer:
                          rate_limit=rate_limit, rate_limit_window=rate_limit_window,
                          sni=sni, template_dir=template_dir,
                          subpath=subpath, profile_title=profile_title, show_username=show_username,
-                         support_url=support_url)
+                         support_url=support_url, announce=announce)
 
     def _load_panel_config(self, env_file: str) -> Dict[str, str]:
         config = {}
@@ -575,6 +609,32 @@ class HysteriaServer:
             raise web.HTTPForbidden()
         return await handler(request)
 
+    async def handle_force_sub(self, request: web.Request) -> web.Response:
+        try:
+            password_token_raw = request.match_info.get('password_token', '')
+            if not password_token_raw:
+                 return web.Response(status=400, text="Error: Missing 'password_token' parameter.")
+            
+            password_token = Utils.sanitize_input(password_token_raw, r'^[a-zA-Z0-9]+$')
+
+            username = self.hysteria_cli.get_username_by_password(password_token)
+            if username is None:
+                return web.Response(status=404, text="User not found for the provided token.")
+
+            user_info = self.hysteria_cli.get_user_info(username)
+            if user_info is None:
+                return web.Response(status=404, text=f"User '{username}' details not found.")
+
+            if user_info.blocked:
+                fake_uri = "hysteria2://x@end.com:443?sni=support.me#⛔Account-Expired⚠️"
+                return web.Response(text=fake_uri, content_type='text/plain')
+            
+            # Force normal sub response
+            return await self._handle_normalsub(request, username, user_info, password_token)
+        except Exception as e:
+            print(f"Force Sub Internal Error: {e}")
+            return web.Response(status=500, text="Error")
+
     @middleware
     async def _noindex_middleware(self, request: web.Request, handler):
         response = await handler(request)
@@ -599,6 +659,10 @@ class HysteriaServer:
 
             if user_info.blocked:
                 return await self._handle_blocked_user(request, user_info)
+
+            # Check for explicit client query param first (Fix for apps that mimic browsers like Happ)
+            if request.query.get('client', '').lower() == 'happ':
+                 return await self._handle_normalsub(request, username, user_info, password_token)
 
             user_agent = request.headers.get('User-Agent', '').lower()
             if any(browser in user_agent for browser in ['chrome', 'firefox', 'safari', 'edge', 'opera']):
@@ -642,6 +706,7 @@ class HysteriaServer:
             status="Suspended",
             sublink_qrcode="",
             sub_link="#blocked",
+            happ_sub_link="#blocked",
             sub_link_encoded="",
             profile_title_encoded="",
             blocked=True,
@@ -687,6 +752,13 @@ class HysteriaServer:
         port_str = f":{self.config.external_port}" if self.config.external_port not in [80, 443, 0] else ""
         web_page_url = f"https://{self.config.domain}{port_str}/{self.config.subpath}/{password_token}"
 
+        encoded_announce = ""
+        if self.config.announce:
+            try:
+                encoded_announce = f"base64:{base64.b64encode(self.config.announce.encode('utf-8')).decode('utf-8')}"
+            except Exception:
+                pass
+
         headers = {
             "profile-title": f"base64:{base64.b64encode(self.config.profile_title.encode('utf-8')).decode('utf-8')}",
             "content-disposition": f'attachment; filename="{self.config.profile_title}.json"',
@@ -694,6 +766,9 @@ class HysteriaServer:
             "profile-update-interval": "1",
             "profile-web-page-url": web_page_url
         }
+
+        if encoded_announce:
+            headers['announce'] = encoded_announce
 
         if self.config.support_url:
             headers['support-url'] = self.config.support_url
@@ -713,6 +788,13 @@ class HysteriaServer:
         port_str = f":{self.config.external_port}" if self.config.external_port not in [80, 443, 0] else ""
         web_page_url = f"https://{self.config.domain}{port_str}/{self.config.subpath}/{password_token}"
         
+        encoded_announce = ""
+        if self.config.announce:
+            try:
+                encoded_announce = f"base64:{base64.b64encode(self.config.announce.encode('utf-8')).decode('utf-8')}"
+            except Exception as e:
+                print(f"Error encoding announce: {e}")
+
         headers = {
             'Subscription-Userinfo': f"upload={user_info.upload_bytes}; download={user_info.download_bytes}; total={user_info.max_download_bytes}; expire={user_info.expiration_timestamp}",
             'Profile-Title': self.config.profile_title,
@@ -720,6 +802,9 @@ class HysteriaServer:
             'Profile-Web-Page-Url': web_page_url,
             'Content-Disposition': f'attachment; filename="{self.config.profile_title}.txt"'
         }
+        
+        if encoded_announce:
+            headers['announce'] = encoded_announce
         
         if self.config.support_url:
             headers['Support-Url'] = self.config.support_url
@@ -735,6 +820,7 @@ class HysteriaServer:
             print(f"Warning: Constructed base URL '{base_url}' might be invalid. Check domain and port config.")
         
         sub_link = f"{base_url}/{self.config.subpath}/{user_info.password}"
+        happ_sub_link = f"{base_url}/{self.config.subpath}/happ/{user_info.password}"
         sub_link_encoded = quote(sub_link, safe='')
         sublink_qrcode = Utils.generate_qrcode_base64(sub_link)
         
@@ -788,6 +874,7 @@ class HysteriaServer:
             status=status,
             sublink_qrcode=sublink_qrcode,
             sub_link=sub_link,
+            happ_sub_link=happ_sub_link,
             sub_link_encoded=sub_link_encoded,
             profile_title_encoded=profile_title_encoded,
             blocked=user_info.blocked,

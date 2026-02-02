@@ -1,5 +1,6 @@
 import os
 import subprocess
+import base64
 from enum import Enum
 from datetime import datetime
 import json
@@ -634,6 +635,10 @@ def edit_normalsub_profile_title(new_title: str):
 def edit_normalsub_support_url(new_url: str):
     run_cmd(['bash', Command.INSTALL_NORMALSUB.value, 'edit_support_url', new_url if new_url else ""])
 
+def edit_normalsub_announce(announce: str):
+    encoded_announce = base64.b64encode(announce.encode('utf-8')).decode('utf-8') if announce else ""
+    run_cmd(['bash', Command.INSTALL_NORMALSUB.value, 'edit_announce', encoded_announce])
+
 def edit_normalsub_show_username(enabled: bool):
     val = "true" if enabled else "false"
     run_cmd(['bash', Command.INSTALL_NORMALSUB.value, 'edit_show_username', val])
@@ -658,6 +663,35 @@ def get_normalsub_profile_title() -> str:
         return env_vars.get('PROFILE_TITLE', 'ANY')
     except Exception as e:
         print(f"Error reading NormalSub .env file: {e}")
+
+def get_normalsub_support_url() -> str:
+    try:
+        if not os.path.exists(NORMALSUB_ENV_FILE):
+            return '' 
+        
+        env_vars = dotenv_values(NORMALSUB_ENV_FILE)
+        return env_vars.get('SUPPORT_URL', '')
+    except Exception as e:
+        print(f"Error reading NormalSub .env file: {e}")
+        return ''
+
+def get_normalsub_announce() -> str:
+    try:
+        if not os.path.exists(NORMALSUB_ENV_FILE):
+            return '' 
+        
+        env_vars = dotenv_values(NORMALSUB_ENV_FILE)
+        encoded = env_vars.get('ANNOUNCE', '')
+        if not encoded:
+            return ''
+        try:
+            return base64.b64decode(encoded).decode('utf-8')
+        except Exception:
+            # Fallback if it was not base64 encoded (legacy/manual edit)
+            return encoded
+    except Exception as e:
+        print(f"Error reading NormalSub .env file: {e}")
+        return ''
         return 'ANY'
 
 def get_normalsub_support_url() -> str:
