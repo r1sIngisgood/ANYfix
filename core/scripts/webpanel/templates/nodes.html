@@ -1618,7 +1618,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const controlsInitial = document.getElementById('warp_initial_controls');
             const controlsActive = document.getElementById('warp_active_controls');
 
-            if (data.all_traffic_via_warp !== undefined || data.popular_sites_via_warp !== undefined) {
+            if (data.is_installed) {
                  // WARP is active/installed
                  if(controlsInitial) controlsInitial.style.display = 'none';
                  if(controlsActive) controlsActive.style.display = 'block';

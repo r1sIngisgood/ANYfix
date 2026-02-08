@@ -62,7 +62,24 @@ def check_version():
         if not version_greater_equal(local_version, latest_version):
             print(f"Latest Version: {latest_version}")
             print(f"{latest_version} Version Change Log:")
-            print(latest_changelog)
+            
+            clean_changelog = []
+            for line in latest_changelog.splitlines():
+                line = line.strip()
+                if line.startswith("## "):
+                    clean_changelog.append(line[3:])
+                elif line.startswith("### "):
+                    clean_changelog.append(line[4:])
+                elif line.startswith("- **"):
+                    # Remove '- **' start and remaining '**'
+                    content = line[4:].replace("**", "")
+                    clean_changelog.append(content)
+                elif line.startswith("- "):
+                    clean_changelog.append(line[2:])
+                else:
+                    clean_changelog.append(line)
+            
+            print('\n'.join(clean_changelog))
     except Exception as e:
         print(f"Error checking version: {e}", file=sys.stderr)
         sys.exit(1)

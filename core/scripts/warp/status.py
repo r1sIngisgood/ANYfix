@@ -25,6 +25,9 @@ def check_warp_configuration():
         print(json.dumps(status_data, indent=4))
         return
 
+    # Check if installed
+    status_data["is_installed"] = Path("/etc/warp/wgcf-profile.conf").exists()
+
     acl_inline = config.get("acl", {}).get("inline", [])
 
     def contains_any_rule(rule_patterns):

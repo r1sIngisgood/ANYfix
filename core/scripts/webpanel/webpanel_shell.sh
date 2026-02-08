@@ -75,6 +75,13 @@ update_caddy_file() {
         return 1
     fi
 
+    local tls_config=""
+    if [ "$SELF_SIGNED_CERT" = "true" ]; then
+        tls_config="tls internal"
+    elif [ -n "$CUSTOM_CERT_PATH" ] && [ -n "$CUSTOM_KEY_PATH" ]; then
+        tls_config="tls $CUSTOM_CERT_PATH $CUSTOM_KEY_PATH"
+    fi
+
     if [ -n "$DECOY_PATH" ] && [ "$DECOY_PATH" != "None" ] && [ "$PORT" -eq 443 ]; then
         cat <<EOL > "$CADDY_CONFIG_FILE"
 {
@@ -83,6 +90,7 @@ update_caddy_file() {
 }
 
 $DOMAIN:$PORT {
+    $tls_config
     route /$ROOT_PATH/* {
 
         reverse_proxy http://127.0.0.1:28260
@@ -108,6 +116,7 @@ EOL
 
 # Listen for incoming requests on the specified domain and port
 $DOMAIN:$PORT {
+    $tls_config
     route /$ROOT_PATH/* {
         reverse_proxy http://127.0.0.1:28260
     }
@@ -547,6 +556,57 @@ stop_service() {
     rm -f "$CADDY_CONFIG_FILE"
 }
 
+update_env_var() {
+    local key=$1
+    local value=$2
+    
+    # Ensure file ends with newline
+    if [ -s "$WEBPANEL_ENV_FILE" ] && [ "$(tail -c 1 "$WEBPANEL_ENV_FILE")" != "" ]; then
+        echo "" >> "$WEBPANEL_ENV_FILE"
+    fi
+
+    if grep -q "^${key}=" "$WEBPANEL_ENV_FILE"; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "$WEBPANEL_ENV_FILE"
+    else
+        echo "${key}=${value}" >> "$WEBPANEL_ENV_FILE"
+    fi
+}
+
+toggle_ssl() {
+    local enabled=$1
+    echo "Toggling SSL mode to Self-Signed: $enabled"
+    update_env_var "SELF_SIGNED_CERT" "$enabled"
+    
+    update_caddy_file
+    systemctl reload hysteria-caddy.service
+    if [ $? -ne 0 ]; then
+        echo "Reload failed, attempting restart..."
+        systemctl restart hysteria-caddy.service
+    fi
+    echo "SSL configuration updated."
+    
+    restart_webpanel
+}
+
+set_ssl_paths() {
+    local cert=$1
+    local key=$2
+    echo "Setting custom SSL paths..."
+    update_env_var "CUSTOM_CERT_PATH" "$cert"
+    update_env_var "CUSTOM_KEY_PATH" "$key"
+    update_env_var "SELF_SIGNED_CERT" "false"
+    
+    update_caddy_file
+    systemctl reload hysteria-caddy.service
+    if [ $? -ne 0 ]; then
+        echo "Reload failed, attempting restart..."
+        systemctl restart hysteria-caddy.service
+    fi
+    echo "Custom SSL paths applied."
+    
+    restart_webpanel
+}
+
 restart_webpanel() {
     echo "Restarting web panel service..."
     # Restart in background to avoid killing the script execution immediately (API needs to return success first)
@@ -583,6 +643,12 @@ set_telegram_auth_status() {
 }
 
 case "$1" in
+    ssl)
+        toggle_ssl "$2"
+        ;;
+    ssl_paths)
+        set_ssl_paths "$2" "$3"
+        ;;
     start)
         if [ -z "$2" ] || [ -z "$3" ]; then
             echo -e "${red}Usage: $0 start <DOMAIN> <PORT> [ADMIN_USERNAME] [ADMIN_PASSWORD] [EXPIRATION_MINUTES] [DEBUG] [DECOY_PATH]${NC}"
