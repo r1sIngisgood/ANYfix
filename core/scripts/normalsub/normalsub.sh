@@ -298,6 +298,23 @@ edit_support_url() {
     systemctl restart hysteria-normal-sub.service
 }
 
+edit_announce() {
+    local val=$1
+    if [ ! -f "$NORMALSUB_ENV_FILE" ]; then
+        echo -e "${red}Error: .env file ($NORMALSUB_ENV_FILE) not found.${NC}"
+        exit 1
+    fi
+    
+    if grep -q "^ANNOUNCE=" "$NORMALSUB_ENV_FILE"; then
+         sed -i "s|^ANNOUNCE=.*|ANNOUNCE=$val|" "$NORMALSUB_ENV_FILE"
+    else
+         echo "ANNOUNCE=$val" >> "$NORMALSUB_ENV_FILE"
+    fi
+    
+    echo -e "${yellow}Restarting hysteria-normal-sub service...${NC}"
+    systemctl restart hysteria-normal-sub.service
+}
+
 case "$1" in
     start)
         if [ -z "$2" ] || [ -z "$3" ]; then
@@ -333,8 +350,11 @@ case "$1" in
     edit_support_url)
         edit_support_url "$2"
         ;;
+    edit_announce)
+        edit_announce "$2"
+        ;;
     *)
-        echo -e "${red}Usage: $0 {start <EXTERNAL_DOMAIN> <EXTERNAL_PORT> | stop | edit_subpath <NEW_SUBPATH> | edit_profile_title <NEW_TITLE> | edit_support_url <URL>}${NC}"
+        echo -e "${red}Usage: $0 {start <EXTERNAL_DOMAIN> <EXTERNAL_PORT> | stop | edit_subpath <NEW_SUBPATH> | edit_profile_title <NEW_TITLE> | edit_support_url <URL> | edit_announce <TEXT>}${NC}"
         exit 1
         ;;
 esac

@@ -10,6 +10,7 @@ class ServerStatusResponse(BaseModel):
     cpu_usage: str
     ram_usage: str
     total_ram: str
+    ram_usage_percent: str # Added field
     online_users: int
 
     upload_speed: str

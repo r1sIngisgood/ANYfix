@@ -25,6 +25,7 @@ def validate_ip_or_domain(v: str) -> str | None:
 class StatusResponse(BaseModel):
     ipv4: str | None = None
     ipv6: str | None = None
+    server_name: str | None = None
 
     @field_validator('ipv4', 'ipv6', mode='before')
     def check_local_server_ip(cls, v: str | None):

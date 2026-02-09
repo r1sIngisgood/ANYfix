@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File
-from ..schema.config.hysteria import ConfigFile, GetPortResponse, GetSniResponse, GetObfsResponse, GetMasqueradeStatusResponse
+from ..schema.config.hysteria import ConfigFile, GetPortResponse, GetSniResponse, GetObfsResponse, GetMasqueradeStatusResponse, PortHoppingStatusResponse
 from ..schema.response import DetailResponse, IPLimitConfig, SetupDecoyRequest, DecoyStatusResponse, IPLimitConfigResponse
 from fastapi.responses import FileResponse
 import shutil
@@ -182,6 +182,30 @@ async def check_masquerade():
         return GetMasqueradeStatusResponse(status=status_message)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f'Error checking Masquerade status: {str(e)}')
+
+@router.get('/port-hopping/status', response_model=PortHoppingStatusResponse, summary='Get Port Hopping Status')
+async def get_port_hopping_status():
+    try:
+        status = cli_api.get_port_hopping_status()
+        return PortHoppingStatusResponse(**status)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
+
+@router.post('/port-hopping/enable', response_model=DetailResponse, summary='Enable Port Hopping')
+async def enable_port_hopping(port_range: str):
+    try:
+        cli_api.enable_port_hopping(port_range)
+        return DetailResponse(detail=f'Port hopping enabled with range {port_range}.')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
+
+@router.post('/port-hopping/disable', response_model=DetailResponse, summary='Disable Port Hopping')
+async def disable_port_hopping():
+    try:
+        cli_api.disable_port_hopping()
+        return DetailResponse(detail='Port hopping disabled.')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
 
 @router.get('/file', response_model=ConfigFile, summary='Get Hysteria2 configuration file')
 async def get_file():

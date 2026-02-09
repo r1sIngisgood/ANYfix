@@ -132,7 +132,7 @@ install_mongodb() {
 
 
 install_packages() {
-    local REQUIRED_PACKAGES=("jq" "curl" "pwgen" "python3" "python3-pip" "python3-venv" "bc" "zip" "unzip" "lsof" "gnupg" "lsb-release")
+    local REQUIRED_PACKAGES=("jq" "curl" "pwgen" "python3" "python3-pip" "python3-venv" "bc" "zip" "unzip" "lsof" "gnupg" "lsb-release" "certbot")
     local MISSING_PACKAGES=()
     
     log_info "Checking required packages..."
@@ -224,6 +224,10 @@ download_and_extract_release() {
         log_warning "Auth binary not found at $auth_binary. The installation might be incomplete."
     fi
 }
+
+
+    log_info "Configuration of SSL Certificate..."
+    
 
 setup_python_env() {
     log_info "Setting up Python virtual environment..."

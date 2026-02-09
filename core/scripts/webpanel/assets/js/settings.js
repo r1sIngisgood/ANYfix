@@ -3,6 +3,7 @@ $(document).ready(function () {
 
     const API_URLS = {
         serverServicesStatus: contentSection.dataset.serverServicesStatusUrl,
+        updatePanel: contentSection.dataset.updatePanelUrl,
         getIp: contentSection.dataset.getIpUrl,
         getAllNodes: contentSection.dataset.getAllNodesUrl,
         addNode: contentSection.dataset.addNodeUrl,
@@ -18,6 +19,8 @@ $(document).ready(function () {
         normalSubGetProfileTitle: contentSection.dataset.normalSubGetProfileTitleUrl,
         normalSubEditSupportUrl: contentSection.dataset.normalSubEditSupportUrlUrl,
         normalSubGetSupportUrl: contentSection.dataset.normalSubGetSupportUrlUrl,
+        normalSubEditAnnounce: contentSection.dataset.normalSubEditAnnounceUrl,
+        normalSubGetAnnounce: contentSection.dataset.normalSubGetAnnounceUrl,
         normalSubEditShowUsername: contentSection.dataset.normalSubEditShowUsernameUrl,
         normalSubGetShowUsername: contentSection.dataset.normalSubGetShowUsernameUrl,
         setupDecoy: contentSection.dataset.setupDecoyUrl,
@@ -36,10 +39,6 @@ $(document).ready(function () {
         stopIpLimit: contentSection.dataset.stopIpLimitUrl,
         cleanIpLimit: contentSection.dataset.cleanIpLimitUrl,
         configIpLimit: contentSection.dataset.configIpLimitUrl,
-        statusWarp: contentSection.dataset.statusWarpUrl,
-        installWarp: contentSection.dataset.installWarpUrl,
-        uninstallWarp: contentSection.dataset.uninstallWarpUrl,
-        configureWarp: contentSection.dataset.configureWarpUrl,
         
         // Security
         securityChangeCredentials: contentSection.dataset.securityChangeCredentialsUrl,
@@ -47,11 +46,21 @@ $(document).ready(function () {
         securitySetTelegramAuth: contentSection.dataset.securitySetTelegramAuthUrl,
         securityGetRootPath: contentSection.dataset.securityGetRootPathUrl,
         securityChangeRootPath: contentSection.dataset.securityChangeRootPathUrl,
-        securityChangeDomainPort: contentSection.dataset.securityChangeDomainPortUrl
+        securityChangeDomainPort: contentSection.dataset.securityChangeDomainPortUrl,
+
+        // SSL
+        sslToggle: contentSection.dataset.sslToggleUrl,
+        sslUpload: contentSection.dataset.sslUploadUrl,
+        sslPaths: contentSection.dataset.sslPathsUrl,
+        sslRenewalList: contentSection.dataset.sslRenewalListUrl,
+        sslRenewalFile: contentSection.dataset.sslRenewalFileUrl,
+        sslSaveRenewalFile: contentSection.dataset.sslSaveRenewalFileUrl
     };
 
     initUI();
     initSecurity();
+    initSSL();
+    initCertbotConfig();
     fetchDecoyStatus();
     fetchNodes();
     fetchExtraConfigs();
@@ -504,9 +513,8 @@ $(document).ready(function () {
          const servicesMap = {
             "hysteria_telegram_bot": "#telegram_form",
             "hysteria_normal_sub": "#normal_sub_service_form",
-            "hysteria_iplimit": "#ip-limit-service",
-            "hysteria_warp": "#warp_service"
-        };
+              "hysteria_iplimit": "#ip-limit-service"
+          };
 
         Object.keys(servicesMap).forEach(serviceKey => {
             let isRunning = data[serviceKey];
@@ -601,19 +609,6 @@ $(document).ready(function () {
                    $("#max_ips").val("");
                    $("#block_duration, #max_ips").removeClass('is-invalid');
                 }
-            } else if (serviceKey === "hysteria_warp") {
-                const isWarpServiceRunning = data[serviceKey];
-                if (isWarpServiceRunning) {
-                    $("#warp_initial_controls").hide();
-                    $("#warp_active_controls").show();
-                    fetchWarpFullStatusAndConfig();
-                } else {
-                    $("#warp_initial_controls").show();
-                    $("#warp_active_controls").hide();
-                    if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
-                }
             }
         });
     }
@@ -624,14 +619,45 @@ $(document).ready(function () {
             type: "GET",
             success: function (data) {
                 $("#normal_subpath_input").val(data.subpath || "");
-                if (data.subpath) {
-                    $("#normal_subpath_input").removeClass('is-invalid');
-                }
+                if (data.subpath) $("#normal_subpath_input").removeClass('is-invalid');
             },
-            error: function (xhr, status, error) {
-                console.error("Failed to fetch NormalSub subpath:", error, xhr.responseText);
-                $("#normal_subpath_input").val("");
-            }
+            error: function (xhr) { console.error("Failed to fetch NormalSub subpath:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetProfileTitle,
+            type: "GET",
+            success: function (data) {
+                $("#normal_profile_title_input").val(data.title || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch profile title:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetSupportUrl,
+            type: "GET",
+            success: function (data) {
+                $("#normal_support_url_input").val(data.url || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch support url:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetAnnounce,
+            type: "GET",
+            success: function (data) {
+                $("#normal_announce_input").val(data.announce || "");
+            },
+            error: function (xhr) { console.error("Failed to fetch announce:", xhr); }
+        });
+
+        $.ajax({
+            url: API_URLS.normalSubGetShowUsername,
+            type: "GET",
+            success: function (data) {
+                $("#normal_show_username_check").prop('checked', data.enabled);
+            },
+            error: function (xhr) { console.error("Failed to fetch show username setting:", xhr); }
         });
     }
 
@@ -855,6 +881,7 @@ $(document).ready(function () {
         const subpath = $("#normal_subpath_input").val();
         const profileTitle = $("#normal_profile_title_input").val();
         const supportUrl = $("#normal_support_url_input").val();
+        const announce = $("#normal_announce_input").val();
         const showUsername = $("#normal_show_username_check").is(":checked");
 
         let subpathValid = isValidSubPath(subpath);
@@ -901,9 +928,23 @@ $(document).ready(function () {
                                         contentType: 'application/json',
                                         data: JSON.stringify({ url: supportUrl }),
                                         success: function() {
-                                             Swal.fire("Success!", "Settings updated successfully!", "success");
-                                             btn.prop('disabled', false);
-                                             btn.find('.spinner-border').hide();
+                                            // Then edit announce
+                                            $.ajax({
+                                                url: API_URLS.normalSubEditAnnounce,
+                                                type: 'PUT',
+                                                contentType: 'application/json',
+                                                data: JSON.stringify({ announce: announce }),
+                                                success: function() {
+                                                     Swal.fire("Success!", "Settings updated successfully!", "success");
+                                                     btn.prop('disabled', false);
+                                                     btn.find('.spinner-border').hide();
+                                                },
+                                                error: function (xhr) {
+                                                    handleAjaxError(xhr, "Failed to update announce. Other settings matched.");
+                                                    btn.prop('disabled', false);
+                                                    btn.find('.spinner-border').hide();
+                                                }
+                                            });
                                         },
                                         error: function (xhr) {
                                             handleAjaxError(xhr, "Failed to update support URL. Other settings matched.");
@@ -966,11 +1007,12 @@ $(document).ready(function () {
         if (!validateForm('change_ip_form')) return;
         const ipv4 = $("#ipv4").val().trim() || null;
         const ipv6 = $("#ipv6").val().trim() || null;
+        const server_name = $("#server_name").val().trim();
         confirmAction("save the new IP settings", function () {
             sendRequest(
                 API_URLS.editIp,
                 "POST",
-                { ipv4: ipv4, ipv6: ipv6 },
+                { ipv4: ipv4, ipv6: ipv6, server_name: server_name },
                 "IP settings saved successfully!",
                 "#ip_change"
             );
@@ -1106,88 +1148,9 @@ $(document).ready(function () {
         });
     }
 
-    function fetchWarpFullStatusAndConfig() {
-        $.ajax({
-            url: API_URLS.statusWarp,
-            type: "GET",
-            success: function (data) {
-                $("#warp_all_traffic").prop('checked', data.all_traffic_via_warp || false);
-                $("#warp_popular_sites").prop('checked', data.popular_sites_via_warp || false);
-                $("#warp_domestic_sites").prop('checked', data.domestic_sites_via_warp || false);
-                $("#warp_block_adult_sites").prop('checked', data.block_adult_content || false);
 
-                $("#warp_initial_controls").hide();
-                $("#warp_active_controls").show();
-            },
-            error: function (xhr, status, error) {
-                let errorMsg = "Failed to fetch WARP configuration.";
-                 if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    errorMsg = xhr.responseJSON.detail;
-                }
-                console.error("Error fetching WARP config:", errorMsg, xhr.responseText);
 
-                if (xhr.status === 404) {
-                    $("#warp_initial_controls").show();
-                    $("#warp_active_controls").hide();
-                    if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
-                    Swal.fire("Info", "WARP service might not be fully configured. Please try reinstalling if issues persist.", "info");
-                } else {
-                     if ($("#warp_config_form").length > 0) {
-                       $("#warp_config_form")[0].reset();
-                    }
-                     Swal.fire("Warning", "Could not load current WARP configuration values. Please check manually or re-save.", "warning");
-                }
-            }
-        });
-    }
 
-    $("#warp_start_btn").on("click", function() {
-        confirmAction("install and start WARP", function () {
-            sendRequest(
-                API_URLS.installWarp,
-                "POST",
-                null,
-                "WARP installation request sent. The page will reload.",
-                "#warp_start_btn",
-                true
-            );
-        });
-    });
-
-    $("#warp_stop_btn").on("click", function() {
-        confirmAction("stop and uninstall WARP", function () {
-            sendRequest(
-                API_URLS.uninstallWarp,
-                "DELETE",
-                null,
-                "WARP uninstallation request sent. The page will reload.",
-                "#warp_stop_btn",
-                true
-            );
-        });
-    });
-
-    $("#warp_save_config_btn").on("click", function() {
-        const configData = {
-            all: $("#warp_all_traffic").is(":checked"),
-            popular_sites: $("#warp_popular_sites").is(":checked"),
-            domestic_sites: $("#warp_domestic_sites").is(":checked"),
-            block_adult_sites: $("#warp_block_adult_sites").is(":checked")
-        };
-        confirmAction("save WARP configuration", function () {
-            sendRequest(
-                API_URLS.configureWarp,
-                "POST",
-                configData,
-                "WARP configuration saved successfully!",
-                "#warp_save_config_btn",
-                false,
-                fetchWarpFullStatusAndConfig
-            );
-        });
-    });
 
     $("#telegram_start").on("click", startTelegram);
     $("#telegram_stop").on("click", stopTelegram);
@@ -1197,7 +1160,8 @@ $(document).ready(function () {
     $("#normal_subpath_save_btn").on("click", saveNormalSubConfig);
     $("#ip_change").on("click", saveIP);
     $("#download_backup").on("click", downloadBackup);
-    $("#upload_backup").on("click", uploadBackup);
+    // Bind to the file input change event, not a non-existent button
+    $("#backup_file").on("change", uploadBackup);
     $("#ip_limit_start").on("click", startIPLimit);
     $("#ip_limit_stop").on("click", stopIPLimit);
     $("#ip_limit_clean").on("click", cleanIPLimit);
@@ -1603,8 +1567,11 @@ $(document).ready(function () {
         // Domain & Port Logic
         const currentDomain = contentSection.dataset.domain;
         const currentPort = contentSection.dataset.port;
+        const currentRootPath = contentSection.dataset.rootPath;
+        
         if (currentDomain) $('#panel_domain').val(currentDomain);
         if (currentPort) $('#panel_port').val(currentPort);
+        if (currentRootPath) $('#root_path_input').val(currentRootPath);
 
         $('#save_domain_port_btn').click(function() {
             const domain = $('#panel_domain').val().trim();
@@ -1708,4 +1675,259 @@ $(document).ready(function () {
             updateRootPath('off', null);
         });
     }
+
+    function initSSL() {
+        // Toggle Handler
+        window.toggleSSLMode = function(isSelfSigned) {
+            Swal.fire({
+                title: 'Updating SSL Configuration...',
+                text: 'This will restart the panel. Please wait.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: API_URLS.sslToggle,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ self_signed: isSelfSigned }),
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: 'Reload Page'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to update SSL settings', 'error');
+                }
+            });
+        };
+
+        // Upload Handler
+        $('#upload_ssl_btn').click(function() {
+            const certFile = $('#ssl_cert_file')[0].files[0];
+            const keyFile = $('#ssl_key_file')[0].files[0];
+
+            if (!certFile || !keyFile) {
+                Swal.fire('Error', 'Please select both Certificate and Private Key files.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('cert_file', certFile);
+            formData.append('key_file', keyFile);
+
+            Swal.fire({
+                title: 'Uploading Certificates...',
+                text: 'This will verify and restart the panel.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: API_URLS.sslUpload,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: 'Reload Page'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to upload certificates', 'error');
+                }
+            });
+        });
+
+        // Paths Handler
+        $('#save_ssl_paths_btn').click(function() {
+            const certPath = $('#custom_cert_path').val().trim();
+            const keyPath = $('#custom_key_path').val().trim();
+
+            if (!certPath || !keyPath) {
+                Swal.fire('Error', 'Please enter both certificate and private key paths.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Setting SSL Paths...',
+                text: 'Verifying paths and restarting panel...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: API_URLS.sslPaths,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ cert_path: certPath, key_path: keyPath }),
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: 'Reload Page'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to set SSL paths', 'error');
+                }
+            });
+        });
+    }
+
+    // Update Panel
+    const updatePanelBtn = document.getElementById('update_panel_btn');
+    if (updatePanelBtn) {
+        updatePanelBtn.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Update Panel?',
+                text: "This will download the latest version and restart the panel service. Connection may be lost briefly.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#71717a',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Updating...',
+                        text: 'Triggering update process in background. The panel will restart shortly.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        timer: 3000,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: API_URLS.updatePanel,
+                        type: 'POST',
+                        success: function(response) {
+                             // Wait a bit then show success
+                             setTimeout(() => {
+                                Swal.fire({
+                                    title: 'Update Started!',
+                                    text: 'The update command has been sent. Please check the logs or wait a minute before reloading.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                });
+                             }, 1000);
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to start update.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function initCertbotConfig() {
+        // Modal references
+        const modal = document.getElementById('renewalConfigModal');
+        const select = document.getElementById('renewal_file_select');
+        const textarea = document.getElementById('renewal_config_content');
+        const saveBtn = document.getElementById('save_renewal_config_btn');
+        const editBtn = document.getElementById('edit_renewal_config_btn');
+
+        if (!editBtn || !modal) return;
+
+        // Open Modal Handler
+        editBtn.addEventListener('click', () => {
+             modal.classList.remove('hidden');
+             // Load list
+             $.ajax({
+                 url: API_URLS.sslRenewalList,
+                 type: 'GET',
+                 success: function(data) {
+                     select.innerHTML = '';
+                     if (data.files && data.files.length > 0) {
+                         data.files.forEach(f => {
+                             const opt = document.createElement('option');
+                             opt.value = f;
+                             opt.text = f;
+                             select.appendChild(opt);
+                         });
+                         // Trigger load of first file
+                         if (select.value) $(select).trigger('change');
+                     } else {
+                         select.innerHTML = '<option value="">No config files found</option>';
+                         textarea.value = '';
+                     }
+                 },
+                 error: function() {
+                     Swal.fire('Error', 'Failed to list renewal configs.', 'error');
+                 }
+             });
+        });
+
+        // Load content on change
+        $(select).on('change', () => {
+             const filename = select.value;
+             if (!filename) return;
+
+             textarea.value = 'Loading...';
+             
+             $.ajax({
+                 url: API_URLS.sslRenewalFile + '?filename=' + encodeURIComponent(filename),
+                 type: 'GET',
+                 success: function(data) {
+                     textarea.value = data.content;
+                 },
+                 error: function() {
+                     textarea.value = 'Error loading file content.';
+                 }
+             });
+        });
+
+        // Save Content
+        saveBtn.addEventListener('click', () => {
+             const filename = select.value;
+             const content = textarea.value;
+             
+             if (!filename) return;
+
+             Swal.fire({
+                 title: 'Saving...',
+                 didOpen: () => Swal.showLoading()
+             });
+
+             $.ajax({
+                 url: API_URLS.sslSaveRenewalFile,
+                 type: 'POST',
+                 contentType: 'application/json',
+                 data: JSON.stringify({ filename: filename, content: content }),
+                 success: function() {
+                     Swal.fire('Success', 'Configuration saved.', 'success');
+                     modal.classList.add('hidden');
+                 },
+                 error: function(xhr) {
+                     Swal.fire('Error', xhr.responseJSON?.detail || 'Failed to save.', 'error');
+                 }
+             });
+        });
+    }
+
 });

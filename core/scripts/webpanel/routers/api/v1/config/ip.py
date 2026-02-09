@@ -46,8 +46,8 @@ def check_tcp_port(host, port, timeout=3):
 async def get_ip_api():
     try:
 
-        ipv4, ipv6 = cli_api.get_ip_address()
-        return StatusResponse(ipv4=ipv4, ipv6=ipv6)
+        ipv4, ipv6, server_name = cli_api.get_ip_address()
+        return StatusResponse(ipv4=ipv4, ipv6=ipv6, server_name=server_name)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
 
@@ -64,7 +64,8 @@ async def add_ip_api():
 @router.post('/edit', response_model=DetailResponse, summary='Edit Local Server IP')
 async def edit_ip_api(body: EditInputBody):
     try:
-        cli_api.edit_ip_address(str(body.ipv4), str(body.ipv6))
+        server_name_val = str(body.server_name) if body.server_name is not None else None
+        cli_api.edit_ip_address(str(body.ipv4), str(body.ipv6), server_name_val)
         return DetailResponse(detail='IP address edited successfully.')
     except Exception as e:
         raise HTTPException(status_code=400, detail=f'Error: {str(e)}')
@@ -72,7 +73,7 @@ async def edit_ip_api(body: EditInputBody):
 
 @router.get('/main-config', summary='Get Main Server Config for Tunneling')
 async def get_main_config():
-    ipv4, ipv6 = cli_api.get_ip_address()
+    ipv4, ipv6, server_name = cli_api.get_ip_address()
     target_ip = ipv4 if ipv4 else ipv6
     
     port = "443"

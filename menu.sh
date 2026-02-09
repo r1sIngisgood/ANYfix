@@ -419,6 +419,14 @@ hysteria_upgrade(){
     bash <(curl https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade.sh)
 }
 
+safe_update_handler(){
+    bash <(curl -sL https://raw.githubusercontent.com/0xd5f/ANY/main/upgrade2.sh)
+}
+
+uninstall_panel_handler(){
+    python3 $CLI_PATH uninstall-hysteria2
+}
+
 warp_configure_handler() {
     local service_name="wg-quick@wgcf.service"
 
@@ -1127,6 +1135,8 @@ display_main_menu() {
     echo -e "${green}[1] ${NC}↝ Hysteria2 Menu"
     echo -e "${cyan}[2] ${NC}↝ Advance Menu"
     echo -e "${cyan}[3] ${NC}↝ Update Panel"
+    echo -e "${cyan}[4] ${NC}↝ Safe Update"
+    echo -e "${red}[5] ${NC}↝ Uninstall Panel"
     echo -e "${red}[0] ${NC}↝ Exit"
     echo -e "${LPurple}◇──────────────────────────────────────────────────────────────────────◇${NC}"
     echo -ne "${yellow}➜ Enter your option: ${NC}"
@@ -1143,6 +1153,8 @@ main_menu() {
             1) hysteria2_menu ;;
             2) advance_menu ;;
             3) hysteria_upgrade ;;
+            4) safe_update_handler ;;
+            5) uninstall_panel_handler ;;
             0) exit 0 ;;
             *) echo "Invalid option. Please try again." ;;
         esac

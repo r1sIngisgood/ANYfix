@@ -10,6 +10,7 @@ class ConfigureInputBody(BaseModel):
 
 
 class StatusResponse(BaseModel):
+    is_installed: bool
     all_traffic_via_warp: bool
     popular_sites_via_warp: bool
     domestic_sites_via_warp: bool

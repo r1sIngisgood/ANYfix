@@ -9,7 +9,7 @@ router = APIRouter()
 
 def get_server_ips():
     env_file = '/etc/hysteria/.configs.env'
-    ipv4, ipv6 = "", ""
+    ipv4, ipv6, server_name = "", "", ""
     if os.path.exists(env_file):
         with open(env_file, 'r') as f:
             for line in f:
@@ -17,13 +17,39 @@ def get_server_ips():
                     ipv4 = line.strip().split('=', 1)[1]
                 elif line.startswith('IP6='):
                     ipv6 = line.strip().split('=', 1)[1]
-    return ipv4, ipv6
+                elif line.startswith('SERVER_NAME='):
+                    server_name = line.strip().split('=', 1)[1]
+    return ipv4, ipv6, server_name
+
+def get_available_certs():
+    cert_dir = '/etc/hysteria'
+    certs = []
+    if os.path.exists(cert_dir):
+        for file in os.listdir(cert_dir):
+            if file.endswith(('.crt', '.key', '.pem')):
+                certs.append(file)
+    return sorted(certs)
 
 
 @router.get('/')
 async def settings(request: Request, templates: Jinja2Templates = Depends(get_templates)):
-    ipv4, ipv6 = get_server_ips()
-    return templates.TemplateResponse('settings.html', {'request': request, 'api_token': CONFIGS.API_TOKEN, 'ipv4': ipv4, 'ipv6': ipv6})
+    ipv4, ipv6, server_name = get_server_ips()
+    available_certs = get_available_certs()
+    
+    return templates.TemplateResponse('settings.html', {
+        'request': request, 
+        'api_token': CONFIGS.API_TOKEN, 
+        'ipv4': ipv4, 
+        'ipv6': ipv6,
+        'server_name': server_name,
+        'self_signed': str(CONFIGS.SELF_SIGNED).lower(),
+        'available_certs': available_certs,
+        'custom_cert': CONFIGS.CUSTOM_CERT or "",
+        'custom_key': CONFIGS.CUSTOM_KEY or "",
+        'domain': CONFIGS.DOMAIN,
+        'port': CONFIGS.PORT,
+        'root_path': CONFIGS.ROOT_PATH
+    })
 
 
 @router.get('/config')

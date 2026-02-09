@@ -1,9 +1,17 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 import cli_api
 from .schema.server import ServerStatusResponse, ServerServicesStatusResponse, VersionCheckResponse, VersionInfoResponse
 
 router = APIRouter()
 
+
+@router.post('/update-panel')
+async def update_panel_api(background_tasks: BackgroundTasks):
+    try:
+        background_tasks.add_task(cli_api.update_panel)
+        return {"status": "success", "detail": "Update process started in background."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get('/status', response_model=ServerStatusResponse)
 async def server_status_api():
@@ -25,6 +33,7 @@ def __parse_server_status(server_info: str) -> ServerStatusResponse:
         'cpu_usage': '0%',
         'total_ram': '0MB',
         'ram_usage': '0MB',
+        'ram_usage_percent': '0%',
         'online_users': 0,
         'upload_speed': '0 B/s',
         'download_speed': '0 B/s',
@@ -75,6 +84,21 @@ def __parse_server_status(server_info: str) -> ServerStatusResponse:
                 if len(parts) == 2:
                     data['ram_usage'] = parts[0].strip()
                     data['total_ram'] = parts[1].strip()
+                    try:
+                        def parse_size(s):
+                            s = s.upper().strip()
+                            if 'GB' in s: return float(s.replace('GB', '').strip()) * 1024
+                            if 'MB' in s: return float(s.replace('MB', '').strip())
+                            if 'KB' in s: return float(s.replace('KB', '').strip()) / 1024
+                            return float(s)
+                        
+                        used = parse_size(data['ram_usage'])
+                        total = parse_size(data['total_ram'])
+                        if total > 0:
+                            percent = (used / total) * 100
+                            data['ram_usage_percent'] = f"{percent:.1f}%"
+                    except:
+                        pass
             elif 'online users' in key:
                 data['online_users'] = int(value)
             elif 'upload speed' in key:

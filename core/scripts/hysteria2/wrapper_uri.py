@@ -60,10 +60,15 @@ def process_users(target_usernames: List[str]) -> List[Dict[str, Any]]:
     hy2_env = load_env_file(CONFIG_ENV)
     ns_env = load_env_file(NORMALSUB_ENV)
 
+    port_hopping_enabled = hy2_env.get('PORT_HOPPING', 'false').lower() == 'true'
+    port_hopping_range = hy2_env.get('PORT_HOPPING_RANGE', '')
+    display_port = port_hopping_range if port_hopping_enabled and port_hopping_range else default_port
+
     default_sni = hy2_env.get('SNI', '')
     default_obfs = config.get("obfs", {}).get("salamander", {}).get("password")
     default_pin = tls_config.get("pinSHA256")
     default_insecure = tls_config.get("insecure", True)
+    server_name = hy2_env.get('SERVER_NAME', '')
     
     base_uri_params = {"insecure": "1" if default_insecure else "0"}
     if default_sni: base_uri_params["sni"] = default_sni
@@ -87,9 +92,16 @@ def process_users(target_usernames: List[str]) -> List[Dict[str, Any]]:
         user_output = {"username": username, "ipv4": None, "ipv6": None, "nodes": [], "normal_sub": None}
 
         if ip4 and ip4 != "None":
-            user_output["ipv4"] = generate_uri(username, auth_password, ip4, default_port, base_uri_params, 4, "IPv4")
+            tag = server_name if server_name else "IPv4"
+            if server_name and ip6 and ip6 != "None":
+                tag = f"{server_name} (IPv4)"
+            user_output["ipv4"] = generate_uri(username, auth_password, ip4, display_port, base_uri_params, 4, tag)
+            
         if ip6 and ip6 != "None":
-            user_output["ipv6"] = generate_uri(username, auth_password, ip6, default_port, base_uri_params, 6, "IPv6")
+            tag = server_name if server_name else "IPv6"
+            if server_name and ip4 and ip4 != "None":
+                tag = f"{server_name} (IPv6)"
+            user_output["ipv6"] = generate_uri(username, auth_password, ip6, display_port, base_uri_params, 6, tag)
 
         for node in nodes:
             node_name = node.get("name")

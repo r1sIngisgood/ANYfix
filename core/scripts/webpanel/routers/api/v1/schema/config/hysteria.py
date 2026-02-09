@@ -19,3 +19,9 @@ class GetObfsResponse(BaseModel):
     
 class GetMasqueradeStatusResponse(BaseModel):
     status: str
+
+class PortHoppingStatusResponse(BaseModel):
+    enabled: bool
+    port_range: str
+    server_port: str
+    iptables_active: bool = False

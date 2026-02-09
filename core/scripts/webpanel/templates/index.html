@@ -243,7 +243,7 @@
 
             <!-- Version -->
             <div class="flex items-center space-x-2 text-xs text-gray-400 border-t md:border-t-0 md:border-l border-gray-100 dark:border-zinc-800 pt-2 md:pt-0 md:pl-4">
-                <span>Panel: <span id="panel-version-display" class="font-semibold text-gray-600 dark:text-gray-300">...</span></span>
+                <span class="flex items-center">Panel: <span id="panel-version-display" class="font-semibold text-gray-600 dark:text-gray-300 ml-1">...</span> <i id="update-indicator" class="fas fa-exclamation-circle text-rose-500 ml-2 hidden animate-pulse" title="Update Available"></i></span>
                 <span>&bull;</span>
                 <span id="core-version-row" class="hidden">Core: <span id="core-version-display" class="font-semibold text-gray-600 dark:text-gray-300">...</span></span>
             </div>
@@ -254,5 +254,5 @@
 {% endblock %}
 
 {% block javascripts %}
-<script src="{{ url_for('assets', path='js/index.js') }}"></script>
+<script src="{{ url_for('assets', path='js/index.js') }}?v={{ range(1000, 9999) | random }}"></script>
 {% endblock %}

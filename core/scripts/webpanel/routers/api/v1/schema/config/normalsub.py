@@ -17,6 +17,12 @@ class EditSupportUrlInputBody(BaseModel):
 class GetSupportUrlResponse(BaseModel):
     url: str = Field(..., description="The current NormalSub support URL.")
 
+class EditAnnounceInputBody(BaseModel):
+    announce: str = Field("", description="The announce text (can be empty).")
+
+class GetAnnounceResponse(BaseModel):
+    announce: str = Field(..., description="The current announce text.")
+
 class EditShowUsernameInputBody(BaseModel):
     enabled: bool = Field(..., description="Whether to show username in subscription profile title.")
 

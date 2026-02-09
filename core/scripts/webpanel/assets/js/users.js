@@ -304,7 +304,8 @@ $(function () {
         }
         
         $("#editNote").val(note || '');
-        $("#editBlocked").prop("checked", !dataRow.find("td.enable-cell i").hasClass("text-success"));
+        // Fix: Check for text-green-500 instead of text-success
+        $("#editBlocked").prop("checked", !dataRow.find("td.enable-cell i").hasClass("text-green-500"));
         $("#editUnlimitedIp").prop("checked", dataRow.find(".unlimited-ip-cell i").hasClass("text-primary"));
     
         const passwordInput = $("#editPassword");
