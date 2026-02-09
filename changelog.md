@@ -1,7 +1,7 @@
-## [Update] - 2026-02-08 - v1.4.5
+## [Update] - 2026-02-09 - v1.4.6
 
-### Fixed
-- **Web Panel SSL**: Исправлена ошибка `ERR_SSL_PROTOCOL_ERROR` в Caddy (добавлена директива `tls internal` для локальных подключений).
-- **SSL Configuration**: Исправлено применение настроек SSL (Self-Signed / Custom). Панель теперь корректно перезагружает сервисы при смене режима.
-- **WARP UI**: Исправлено ложное отображение статуса "Installed" для WARP. Теперь кнопка установки доступна, если конфигурационный файл отсутствует.
-- **Telegram Bot**: Улучшено форматирование уведомлений о выходе новой версии (очистка Markdown-тегов для лучшей читаемости).
+### Added
+- **Port Hopping**: Новая функция Port Hopping в настройках Hysteria. Позволяет перенаправлять диапазон UDP-портов на серверный порт через iptables/ip6tables NAT PREROUTING. Клиенты переключаются между портами для обхода throttling провайдера.
+- **Port Hopping API**: Три новых эндпоинта — `GET /port-hopping/status`, `POST /port-hopping/enable`, `POST /port-hopping/disable`.
+- **Port Hopping UI**: Карточка управления Port Hopping на странице Hysteria Settings (включение/выключение, задание диапазона портов, отображение статуса и активных iptables-правил).
+- **Port Hopping в URI**: При активном Port Hopping пользовательские URI автоматически содержат диапазон портов вместо одиночного порта (формат `hy2://user:pass@ip:20000-50000?params`).

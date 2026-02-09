@@ -72,6 +72,7 @@ class Command(Enum):
     VERSION = os.path.join(SCRIPT_DIR, 'hysteria2', 'version.py')
     LIMIT_SCRIPT = os.path.join(SCRIPT_DIR, 'hysteria2', 'limit.sh')
     KICK_USER_SCRIPT = os.path.join(SCRIPT_DIR, 'hysteria2', 'kickuser.py')
+    PORT_HOPPING = os.path.join(SCRIPT_DIR, 'hysteria2', 'port_hopping.py')
 
 
 
@@ -197,6 +198,27 @@ def get_hysteria2_sni() -> str | None:
 
 def change_hysteria2_sni(sni: str):
     run_cmd(['python3', Command.CHANGE_SNI_HYSTERIA2.value, sni])
+
+
+def enable_port_hopping(port_range: str):
+    run_cmd(['python3', Command.PORT_HOPPING.value, 'enable', '--range', port_range])
+
+
+def disable_port_hopping():
+    run_cmd(['python3', Command.PORT_HOPPING.value, 'disable'])
+
+
+def get_port_hopping_status() -> dict:
+    try:
+        output = run_cmd(['python3', Command.PORT_HOPPING.value, 'status'])
+        return json.loads(output.strip())
+    except Exception:
+        env_vars = dotenv_values(CONFIG_ENV_FILE)
+        enabled = env_vars.get('PORT_HOPPING', 'false').lower() == 'true'
+        port_range = env_vars.get('PORT_HOPPING_RANGE', '')
+        config = get_hysteria2_config_file()
+        server_port = config.get('listen', '').split(':')[-1] if config else ''
+        return {"enabled": enabled, "port_range": port_range, "server_port": server_port, "iptables_active": False}
 
 
 def backup_hysteria2():

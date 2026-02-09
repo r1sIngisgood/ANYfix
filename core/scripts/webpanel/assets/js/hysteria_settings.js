@@ -12,7 +12,10 @@ $(document).ready(function () {
         disableMasquerade: contentSection.dataset.disableMasqueradeUrl,
         setPortTemplate: contentSection.dataset.setPortUrlTemplate,
         setSniTemplate: contentSection.dataset.setSniUrlTemplate,
-        updateGeoTemplate: contentSection.dataset.updateGeoUrlTemplate
+        updateGeoTemplate: contentSection.dataset.updateGeoUrlTemplate,
+        portHoppingStatus: contentSection.dataset.portHoppingStatusUrl,
+        portHoppingEnable: contentSection.dataset.portHoppingEnableUrl,
+        portHoppingDisable: contentSection.dataset.portHoppingDisableUrl
     };
 
     function isValidDomain(domain) {
@@ -260,8 +263,66 @@ $(document).ready(function () {
         );
     }
 
+    function isValidPortRange(range) {
+        if (!range) return false;
+        const match = range.match(/^(\d+)-(\d+)$/);
+        if (!match) return false;
+        const start = parseInt(match[1]);
+        const end = parseInt(match[2]);
+        return start >= 1 && end <= 65535 && start < end;
+    }
+
+    function fetchPortHoppingStatus() {
+        $.ajax({
+            url: API_URLS.portHoppingStatus,
+            type: "GET",
+            success: function(data) {
+                const container = $("#port_hopping_status_container");
+                const msg = $("#port_hopping_status_message");
+                const enableBtn = $("#port_hopping_enable_btn");
+                const disableBtn = $("#port_hopping_disable_btn");
+
+                if (data.enabled) {
+                    msg.html(`<span class="text-emerald-600 dark:text-emerald-400 font-medium">Active</span> — Range: <strong>${data.port_range}</strong> → Port ${data.server_port}`);
+                    container.addClass("border-emerald-200 dark:border-emerald-800");
+                    $("#port_hopping_range").val(data.port_range);
+                    enableBtn.text("Update");
+                    disableBtn.show();
+                } else {
+                    msg.html('<span class="text-zinc-500">Disabled</span>');
+                    enableBtn.text("Enable");
+                    disableBtn.hide();
+                }
+            },
+            error: function() {
+                $("#port_hopping_status_message").html('<span class="text-red-500">Failed to fetch status.</span>');
+            }
+        });
+    }
+
+    function enablePortHopping() {
+        const range = $("#port_hopping_range").val().trim();
+        if (!isValidPortRange(range)) {
+            $("#port_hopping_range").addClass("is-invalid");
+            return;
+        }
+        $("#port_hopping_range").removeClass("is-invalid");
+
+        const url = API_URLS.portHoppingEnable + "?port_range=" + encodeURIComponent(range);
+        confirmAction("Enable Port Hopping?", `UDP ports ${range} will be redirected to the server port via iptables.`, () => {
+            sendRequest(url, "POST", null, "Port hopping enabled!", "#port_hopping_enable_btn", false, fetchPortHoppingStatus);
+        });
+    }
+
+    function disablePortHopping() {
+        confirmAction("Disable Port Hopping?", "iptables rules will be removed and port hopping will be turned off.", () => {
+            sendRequest(API_URLS.portHoppingDisable, "POST", null, "Port hopping disabled!", "#port_hopping_disable_btn", false, fetchPortHoppingStatus);
+        });
+    }
+
     initUI();
     fetchAllStatuses();
+    fetchPortHoppingStatus();
 
     $("#port_change").on("click", changePort);
     $("#sni_change").on("click", changeSNI);
@@ -269,6 +330,8 @@ $(document).ready(function () {
     $("#obfs_disable_btn").on("click", disableObfs);
     $("#masquerade_enable_btn").on("click", enableMasquerade);
     $("#masquerade_disable_btn").on("click", disableMasquerade);
+    $("#port_hopping_enable_btn").on("click", enablePortHopping);
+    $("#port_hopping_disable_btn").on("click", disablePortHopping);
     $("#geo_update_iran").on("click", () => updateGeo('iran'));
     $("#geo_update_china").on("click", () => updateGeo('china'));
     $("#geo_update_russia").on("click", () => updateGeo('russia'));
@@ -281,6 +344,16 @@ $(document).ready(function () {
             $(this).addClass('is-invalid');
         } else {
              $(this).removeClass('is-invalid');
+        }
+    });
+
+    $('#port_hopping_range').on('input', function () {
+        if (isValidPortRange($(this).val())) {
+            $(this).removeClass('is-invalid');
+        } else if ($(this).val().trim() !== "") {
+            $(this).addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-invalid');
         }
     });
 });

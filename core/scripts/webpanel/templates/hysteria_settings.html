@@ -20,6 +20,9 @@
     data-set-port-url-template="{{ url_for('set_port_api', port='PORT_PLACEHOLDER') }}"
     data-set-sni-url-template="{{ url_for('set_sni_api', sni='SNI_PLACEHOLDER') }}"
     data-update-geo-url-template="{{ url_for('update_geo', country='COUNTRY_PLACEHOLDER') }}"
+    data-port-hopping-status-url="{{ url_for('get_port_hopping_status') }}"
+    data-port-hopping-enable-url="{{ url_for('enable_port_hopping') }}"
+    data-port-hopping-disable-url="{{ url_for('disable_port_hopping') }}"
 >
     <!-- Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -149,6 +152,50 @@
                     </button>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Port Hopping Card -->
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 flex flex-col h-full">
+            <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mr-3 text-orange-600 dark:text-orange-400">
+                    <i class="fas fa-random text-sm"></i>
+                </div>
+                Port Hopping
+            </h3>
+            <div class="flex-1">
+                <div class="mb-4">
+                    <h5 class="text-sm font-bold text-zinc-900 dark:text-white mb-2">Status</h5>
+                    <div id="port_hopping_status_container" class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                        <span id="port_hopping_status_message" class="text-zinc-600 dark:text-zinc-400 text-sm">Loading...</span>
+                    </div>
+                </div>
+                <form id="port_hopping_form">
+                    <div class="mb-4">
+                        <label for="port_hopping_range" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Port Range</label>
+                        <input type="text" class="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all placeholder-zinc-400" id="port_hopping_range"
+                            placeholder="e.g. 20000-50000">
+                        <div class="invalid-feedback text-red-500 text-sm mt-1 hidden">
+                            Enter a valid range (e.g. 20000-50000).
+                        </div>
+                    </div>
+                </form>
+                <div class="p-4 mb-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/20 text-yellow-700 dark:text-yellow-500 text-sm">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle mt-0.5 mr-2"></i>
+                        <div>
+                            Redirects a UDP port range to the server port via iptables. Clients will hop between ports to bypass throttling.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="port_hopping_enable_btn" type="button" class="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow-lg shadow-orange-500/20 transition-all font-medium text-sm">
+                    Enable
+                </button>
+                <button id="port_hopping_disable_btn" type="button" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium text-sm" style="display: none;">
+                    Disable
+                </button>
             </div>
         </div>
 

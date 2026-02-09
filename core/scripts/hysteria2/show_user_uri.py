@@ -154,13 +154,18 @@ def show_uri(args: argparse.Namespace) -> None:
     nodes = load_nodes()
     terminal_width = get_terminal_width()
 
+    hy2_env = load_hysteria2_env()
+    port_hopping_enabled = hy2_env.get('PORT_HOPPING', 'false').lower() == 'true'
+    port_hopping_range = hy2_env.get('PORT_HOPPING_RANGE', '')
+    display_port = port_hopping_range if port_hopping_enabled and port_hopping_range else local_port
+
     if args.all or args.ip_version == 4:
         if ip4 and ip4 != "None":
             tag = server_name if server_name else "IPv4"
             if server_name and (args.all and ip6 and ip6 != "None"):
                   tag = f"{server_name} (IPv4)"
             
-            uri = generate_uri(args.username, auth_password, ip4, local_port, 
+            uri = generate_uri(args.username, auth_password, ip4, display_port, 
                                  local_obfs_password, local_sha256, local_sni, 4, local_insecure, tag)
             display_uri_and_qr(uri, tag, args, terminal_width)
             
@@ -170,7 +175,7 @@ def show_uri(args: argparse.Namespace) -> None:
             if server_name and (args.all and ip4 and ip4 != "None"):
                   tag = f"{server_name} (IPv6)"
 
-            uri = generate_uri(args.username, auth_password, ip6, local_port, 
+            uri = generate_uri(args.username, auth_password, ip6, display_port, 
                                  local_obfs_password, local_sha256, local_sni, 6, local_insecure, tag)
             display_uri_and_qr(uri, tag, args, terminal_width)
 
